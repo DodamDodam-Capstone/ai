@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "협업 규칙"
+    url: "https://github.com/DodamDodam-Capstone/ai/blob/main/docs/JIRA_WORKFLOW.md"
+    about: "Issue 생성 전 Jira·GitHub 업무 규칙을 확인하세요."
