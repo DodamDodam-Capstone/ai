@@ -1,0 +1,48 @@
+name: GitHub Issue to Jira
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "다시 동기화할 GitHub Issue 번호"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: github-issue-to-jira-${{ github.repository }}-${{ github.event.issue.number || inputs.issue_number }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: github-issue-to-jira
+    if: github.event_name == 'workflow_dispatch' || !github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      GITHUB_ACTOR: ${{ github.actor }}
+      ISSUE_NUMBER: ${{ github.event.issue.number || inputs.issue_number }}
+      JIRA_API_URL: https://api.atlassian.com/ex/jira/990904dd-9f6d-4b36-a9b6-e685801d7c4b
+      JIRA_SITE_URL: https://dodamdodam.atlassian.net
+      JIRA_PROJECT_KEY: SCRUM
+      REPOSITORY_PREFIX: AI
+    steps:
+      - name: 중앙 동기화 스크립트 체크아웃
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: DodamDodam-Capstone/integration
+          ref: main
+          path: .jira-sync
+          persist-credentials: false
+
+      - name: GitHub Issue를 Jira에 연결
+        run: python3 .jira-sync/.github/scripts/sync_github_issue_to_jira.py

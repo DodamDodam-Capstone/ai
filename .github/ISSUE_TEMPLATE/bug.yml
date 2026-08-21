@@ -1,0 +1,33 @@
+name: "🐛 AI Bug"
+description: "재현 가능한 AI 결함을 등록합니다. Jira Bug가 자동 생성됩니다."
+title: "[AI] "
+labels: ["bug"]
+body:
+  - type: input
+    id: parent_jira
+    attributes:
+      label: "상위 Jira 키 (선택)"
+      placeholder: "SCRUM-6"
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "재현 절차"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "기대 결과"
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: "실제 결과"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: "환경 및 로그"
+      description: "모델·데이터·실행 환경·로그를 적되 비밀값은 포함하지 마세요."
