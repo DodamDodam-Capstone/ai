@@ -1,0 +1,44 @@
+name: Close Linked Issues
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  close-linked-issues:
+    if: >-
+      github.event.pull_request.merged == true &&
+      (github.event.pull_request.base.ref == 'development' ||
+       github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+      PR_BODY: ${{ github.event.pull_request.body }}
+    steps:
+      - name: PR 본문의 연결된 Issue 종료
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import urllib.request
+          pattern = r"(?im)\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)"
+          numbers = sorted(set(re.findall(pattern, os.environ.get("PR_BODY", ""))))
+          for number in numbers:
+              url = f"https://api.github.com/repos/{os.environ['REPOSITORY']}/issues/{number}"
+              data = json.dumps({"state": "closed", "state_reason": "completed"}).encode()
+              request = urllib.request.Request(url, data=data, method="PATCH")
+              request.add_header("Authorization", f"Bearer {os.environ['GH_TOKEN']}")
+              request.add_header("Accept", "application/vnd.github+json")
+              request.add_header("Content-Type", "application/json")
+              with urllib.request.urlopen(request) as response:
+                  print(f"Issue #{number} 종료: HTTP {response.status}")
+          if not numbers:
+              print("종료할 연결 Issue가 없습니다.")
+          PY
