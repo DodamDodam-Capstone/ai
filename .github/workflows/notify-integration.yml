@@ -33,11 +33,15 @@ jobs:
           COMPONENT: ai
           SOURCE_REPOSITORY: ${{ github.repository }}
           SOURCE_SHA: ${{ github.sha }}
+          SOURCE_COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
           SOURCE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           python3 - <<'PY' | gh api --method POST repos/DodamDodam-Capstone/integration/dispatches --input -
           import json
           import os
+          import re
+
+          match = re.search(r"\bSCRUM-\d+\b", os.environ.get("SOURCE_COMMIT_MESSAGE", ""))
 
           print(json.dumps({
               "event_type": "component-main-updated",
@@ -45,6 +49,7 @@ jobs:
                   "component": os.environ["COMPONENT"],
                   "repository": os.environ["SOURCE_REPOSITORY"],
                   "sha": os.environ["SOURCE_SHA"],
+                  "jira_key": match.group(0) if match else "",
                   "run_url": os.environ["SOURCE_RUN_URL"],
               },
           }))

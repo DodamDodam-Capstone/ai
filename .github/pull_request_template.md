@@ -4,7 +4,8 @@
 
 ## Jira 작업
 
-<!-- 예: DOD-123. Jira 연동 전이거나 해당 사항이 없으면 "없음"으로 작성합니다. -->
+<!-- 예: SCRUM-123 [AI] 추천 모델 평가 구현 -->
+<!-- Jira: https://dodamdodam.atlassian.net/browse/SCRUM-123 -->
 
 ## 관련 GitHub 이슈
 
@@ -26,3 +27,5 @@
 - [ ] 필요한 테스트를 추가하거나 수정했습니다.
 - [ ] 비밀정보, dataset, model artifact가 포함되지 않았는지 확인했습니다.
 - [ ] PR 제목이 `🐛 fix: 설명` 형식을 따릅니다.
+- [ ] PR 제목과 브랜치에 같은 `SCRUM-번호`가 있습니다.
+- [ ] AI 작업 PR 제목에 `[AI]`가 있습니다.
