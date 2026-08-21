@@ -50,3 +50,8 @@ Resolves #8
 전체 Epic·하위 이슈·Team Board 운영 규칙은
 [integration 문서](https://github.com/DodamDodam-Capstone/integration/blob/main/docs/JIRA_GITHUB_INTEGRATION.md)를
 기준으로 합니다.
+
+## 초기 자동화 검증
+
+- 2026-08-22: `development` 병합 후 GitHub Issue 종료, Jira Task 완료 및
+  `#ai-actions` Slack 알림을 확인합니다.
