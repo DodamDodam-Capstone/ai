@@ -25,6 +25,11 @@ Epic 아래에 둘 업무는 Form의 `상위 Jira 키`에 `SCRUM-<번호>`를 �
 번호를 넣어 재시도합니다. 이미 Jira 키가 있거나 `jira-skip` 레이블이 있는
 Issue는 생성하지 않습니다.
 
+저장소가 public이므로 자동 생성은 GitHub의 `OWNER`, `MEMBER`, `COLLABORATOR`가
+연 Issue에만 실행됩니다. 외부 사용자가 등록한 Issue는 팀원이 내용을 검토한 뒤
+`Run workflow`로 승인·동기화합니다. 재실행해도 Jira 업무와 링크 댓글은 중복
+생성되지 않으며 Slack 성공 알림 완료는 `jira-notified` 레이블로 표시됩니다.
+
 예시:
 
 ```text
