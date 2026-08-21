@@ -3,6 +3,7 @@ name: Jira Key
 on:
   pull_request:
     branches: [development, main]
+    types: [opened, edited, synchronize, reopened]
 
 permissions:
   contents: read
@@ -10,6 +11,7 @@ permissions:
 jobs:
   jira-issue-key:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
       HEAD_REF: ${{ github.head_ref }}

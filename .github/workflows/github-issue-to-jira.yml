@@ -22,8 +22,9 @@ jobs:
   sync:
     name: github-issue-to-jira
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association)
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'issues' &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -36,10 +37,10 @@ jobs:
       REPOSITORY_PREFIX: AI
     steps:
       - name: 중앙 동기화 스크립트 체크아웃
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: DodamDodam-Capstone/integration
-          ref: main
+          ref: 37f994f5fbdf18ea1b68ba058d7ab97f5a1c806d
           path: .jira-sync
           persist-credentials: false
 
