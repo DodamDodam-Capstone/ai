@@ -73,6 +73,14 @@ Resolves #8
 - Jira 업무는 삭제하지 않고 `완료` 상태로 전환하며 Team Board의
   `Show completed tickets`에서 완료 기록을 확인할 수 있습니다.
 
+## 장기 브랜치 병합 원칙
+
+- `feature/*`, `fix/*` → `development`: squash merge로 작업 단위를 정리합니다.
+- `development` → `main`: merge commit으로 두 장기 브랜치의 계보를 보존합니다.
+- 두 보호 브랜치에는 직접 push와 force push를 사용하지 않습니다.
+- 초기 독립 squash로 갈라진 계보는 commit을 삭제하지 않고 보호된 동기화 PR로
+  한 번 연결합니다.
+
 전체 Epic·하위 이슈·Team Board 운영 규칙은
 [integration 문서](https://github.com/DodamDodam-Capstone/integration/blob/main/docs/JIRA_GITHUB_INTEGRATION.md)를
 기준으로 합니다.
