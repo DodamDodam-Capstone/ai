@@ -10,6 +10,9 @@ Organization 전체 협업 흐름은
 [integration 저장소 문서](https://github.com/DodamDodam-Capstone/integration/blob/main/docs/GITHUB_WORKFLOW.md)에서
 관리합니다.
 
+AI의 Jira Epic·Task 명명과 GitHub Issue·브랜치·PR 연결 규칙은
+[`docs/JIRA_WORKFLOW.md`](docs/JIRA_WORKFLOW.md)를 따릅니다.
+
 변경 사항은 보호된 `development` → `main` PR에서 사람의 승인을 받은 후
 squash merge합니다. `main` 반영이 완료되면 Bot PR이 integration 저장소의
 AI commit SHA를 자동으로 갱신합니다.
