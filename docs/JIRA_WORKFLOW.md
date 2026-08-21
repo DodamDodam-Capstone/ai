@@ -10,6 +10,21 @@ AI 업무는 Jira와 GitHub 제목에 `[AI]`를 사용합니다.
 - GitHub Issue: `SCRUM-<번호> [AI] <Jira Task와 같은 제목>`
 - Jira Task 하나와 AI GitHub Issue 하나를 1:1로 연결합니다.
 
+## GitHub Issue에서 Jira 자동 생성
+
+`New issue`에서 `AI Task` 또는 `AI Bug` Form을 사용합니다. Issue가 열리면
+`GitHub Issue to Jira` workflow가 다음을 자동 처리합니다.
+
+1. Jira `SCRUM` 프로젝트에 `[AI]` Task 또는 Bug 생성
+2. GitHub Issue 제목을 `SCRUM-<번호> [AI] ...`로 변경
+3. Jira 링크 댓글과 `jira-linked` 레이블 추가
+4. `#ai-actions`에 Source GitHub Issue와 Target Jira 업무 알림 전송
+
+Epic 아래에 둘 업무는 Form의 `상위 Jira 키`에 `SCRUM-<번호>`를 입력합니다.
+동기화가 실패하면 Actions의 `GitHub Issue to Jira`를 `Run workflow`로 열어 Issue
+번호를 넣어 재시도합니다. 이미 Jira 키가 있거나 `jira-skip` 레이블이 있는
+Issue는 생성하지 않습니다.
+
 예시:
 
 ```text
