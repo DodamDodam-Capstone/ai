@@ -16,16 +16,9 @@ jobs:
       - name: Send workflow result to repository Slack channel
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-          REPOSITORY: ${{ github.repository }}
-          WORKFLOW: ${{ github.event.workflow_run.name }}
-          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          EVENT_NAME: ${{ github.event.workflow_run.event }}
-          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-          ACTOR: ${{ github.event.workflow_run.actor.login }}
-          RUN_URL: ${{ github.event.workflow_run.html_url }}
         run: |
           python3 - <<'PY'
+          from datetime import datetime
           import json
           import os
           import urllib.request
@@ -35,18 +28,55 @@ jobs:
               print("SLACK_WEBHOOK_URL is not configured; notification skipped.")
               raise SystemExit(0)
 
-          conclusion = os.environ["CONCLUSION"]
+          with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
+              event = json.load(event_file)
+          run = event["workflow_run"]
+          repository = run["repository"]["full_name"]
+          workflow = run["name"]
+          conclusion = run.get("conclusion") or "unknown"
+          trigger = run.get("event") or "unknown"
+          head_branch = run.get("head_branch") or "—"
+          head_sha = run.get("head_sha") or ""
+          actor = (run.get("actor") or {}).get("login") or "unknown"
+          run_url = run["html_url"]
+          pull_requests = run.get("pull_requests") or []
+          source_branch = "—"
+          target_branch = head_branch
+          pr_number = None
+          pr_url = None
+          if pull_requests:
+              pull_request = pull_requests[0]
+              source_branch = (pull_request.get("head") or {}).get("ref") or head_branch
+              target_branch = (pull_request.get("base") or {}).get("ref") or "—"
+              pr_number = pull_request.get("number")
+              if pr_number:
+                  pr_url = f"{run['repository']['html_url']}/pull/{pr_number}"
+          elif trigger != "push":
+              source_branch = head_branch
+              target_branch = "—"
+          def parse_time(value):
+              if not value:
+                  return None
+              return datetime.fromisoformat(value.replace("Z", "+00:00"))
+          started_at = parse_time(run.get("run_started_at") or run.get("created_at"))
+          finished_at = parse_time(run.get("updated_at"))
+          duration = "unknown"
+          if started_at and finished_at:
+              total_seconds = max(0, int((finished_at - started_at).total_seconds()))
+              minutes, seconds = divmod(total_seconds, 60)
+              duration = f"{minutes}m {seconds}s" if minutes else f"{seconds}s"
           icon = {
               "success": "✅",
               "failure": "❌",
               "cancelled": "⚪",
               "timed_out": "⏰",
           }.get(conclusion, "ℹ️")
-          sha = os.environ["HEAD_SHA"][:7]
-          text = (
-              f"{icon} {os.environ['REPOSITORY']} — "
-              f"{os.environ['WORKFLOW']}: {conclusion}"
-          )
+          sha = head_sha[:7] if head_sha else "unknown"
+          text = f"{icon} {conclusion.upper()} | {repository} | {workflow}"
+          flow = f"`{source_branch}` → `{target_branch}`"
+          pr_text = f"<{pr_url}|#{pr_number}>" if pr_url else "—"
+          commit_url = f"{run['repository']['html_url']}/commit/{head_sha}"
+          commit_text = f"<{commit_url}|`{sha}`>" if head_sha else "unknown"
           payload = {
               "text": text,
               "blocks": [
@@ -56,11 +86,19 @@ jobs:
                   },
                   {
                       "type": "section",
+                      "text": {"type": "mrkdwn", "text": f"*Branch flow*\n{flow}"},
+                  },
+                  {
+                      "type": "section",
                       "fields": [
-                          {"type": "mrkdwn", "text": f"*Branch*\n{os.environ['HEAD_BRANCH']}"},
-                          {"type": "mrkdwn", "text": f"*Event*\n{os.environ['EVENT_NAME']}"},
-                          {"type": "mrkdwn", "text": f"*Commit*\n`{sha}`"},
-                          {"type": "mrkdwn", "text": f"*Actor*\n{os.environ['ACTOR']}"},
+                          {"type": "mrkdwn", "text": f"*Source branch*\n`{source_branch}`"},
+                          {"type": "mrkdwn", "text": f"*Target branch*\n`{target_branch}`"},
+                          {"type": "mrkdwn", "text": f"*Trigger*\n`{trigger}`"},
+                          {"type": "mrkdwn", "text": f"*Pull request*\n{pr_text}"},
+                          {"type": "mrkdwn", "text": f"*Commit*\n{commit_text}"},
+                          {"type": "mrkdwn", "text": f"*Actor*\n`{actor}`"},
+                          {"type": "mrkdwn", "text": f"*Run*\n#{run['run_number']} (attempt {run['run_attempt']})"},
+                          {"type": "mrkdwn", "text": f"*Duration*\n{duration}"},
                       ],
                   },
                   {
@@ -69,9 +107,13 @@ jobs:
                           {
                               "type": "button",
                               "text": {"type": "plain_text", "text": "View GitHub Actions"},
-                              "url": os.environ["RUN_URL"],
+                              "url": run_url,
                           }
-                      ],
+                      ] + ([{
+                          "type": "button",
+                          "text": {"type": "plain_text", "text": "View Pull Request"},
+                          "url": pr_url,
+                      }] if pr_url else []),
                   },
               ],
           }
@@ -85,4 +127,3 @@ jobs:
               if response.status != 200:
                   raise RuntimeError(f"Slack returned HTTP {response.status}")
           PY
-
