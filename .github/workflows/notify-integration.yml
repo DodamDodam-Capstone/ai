@@ -1,0 +1,55 @@
+name: Component Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: notify-integration
+    runs-on: ubuntu-latest
+    env:
+      INTEGRATION_APP_ID: ${{ secrets.INTEGRATION_APP_ID }}
+      INTEGRATION_APP_PRIVATE_KEY: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
+    steps:
+      - name: Create Integration Bot token
+        if: env.INTEGRATION_APP_ID != '' && env.INTEGRATION_APP_PRIVATE_KEY != ''
+        id: app-token
+        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        with:
+          app-id: ${{ env.INTEGRATION_APP_ID }}
+          private-key: ${{ env.INTEGRATION_APP_PRIVATE_KEY }}
+          owner: DodamDodam-Capstone
+          repositories: integration
+
+      - name: Notify integration repository
+        if: steps.app-token.outputs.token != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          COMPONENT: ai
+          SOURCE_REPOSITORY: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 - <<'PY' | gh api --method POST repos/DodamDodam-Capstone/integration/dispatches --input -
+          import json
+          import os
+
+          print(json.dumps({
+              "event_type": "component-main-updated",
+              "client_payload": {
+                  "component": os.environ["COMPONENT"],
+                  "repository": os.environ["SOURCE_REPOSITORY"],
+                  "sha": os.environ["SOURCE_SHA"],
+                  "run_url": os.environ["SOURCE_RUN_URL"],
+              },
+          }))
+          PY
+
+      - name: Integration Bot readiness
+        if: env.INTEGRATION_APP_ID == '' || env.INTEGRATION_APP_PRIVATE_KEY == ''
+        run: echo "Integration Bot credentials are not configured; dispatch skipped."
