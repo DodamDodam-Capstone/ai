@@ -10,6 +10,7 @@
 ## 관련 GitHub 이슈
 
 <!-- 예: Resolves #123 -->
+<!-- Jira-first 업무로 GitHub Issue가 없으면 비워 둡니다. -->
 
 ## 변경 사항
 

@@ -34,6 +34,13 @@ jobs:
               raise SystemExit(0)
           head_keys = re.findall(r"\bSCRUM-\d+\b", head)
           title_keys = re.findall(r"\bSCRUM-\d+\b", title)
+          if head == "development" and base == "main":
+              if len(title_keys) != 1:
+                  print("릴리스 PR 제목에는 sprint 또는 Epic Jira 키가 정확히 하나 필요합니다.")
+                  raise SystemExit(1)
+              print(f"릴리스 Jira 키 검증 완료: {title_keys[0]}")
+              raise SystemExit(0)
+
           if len(head_keys) != 1 or len(title_keys) != 1:
               print("PR 제목과 브랜치 각각에 SCRUM Jira 키가 정확히 하나 필요합니다.")
               raise SystemExit(1)

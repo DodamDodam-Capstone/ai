@@ -3,12 +3,18 @@
 Jira 사이트는 `dodamdodam.atlassian.net`, 프로젝트 키는 `SCRUM`입니다.
 AI 업무는 Jira와 GitHub 제목에 `[AI]`를 사용합니다.
 
+처음 참여하는 팀원은 실제 예시와 체크리스트가 포함된
+[`TEAM_WORKFLOW_GUIDE.md`](TEAM_WORKFLOW_GUIDE.md)를 먼저 읽습니다. Jira Task가
+이미 있으면 GitHub Issue Form을 다시 사용하지 않고, 해당 Jira 키를 branch와
+PR에 직접 사용합니다.
+
 ## Epic과 Task
 
 - 여러 저장소가 참여하는 Jira Epic: `[EPIC] <사용자 가치 또는 목표>`
 - AI Jira Task: `[AI] <구현할 결과>`
 - GitHub Issue: `SCRUM-<번호> [AI] <Jira Task와 같은 제목>`
-- Jira Task 하나와 AI GitHub Issue 하나를 1:1로 연결합니다.
+- GitHub-first 업무는 Jira Task 하나와 AI GitHub Issue 하나를 1:1로
+  연결합니다. Jira-first 업무는 이미 있는 Task 키로 바로 개발합니다.
 
 ## GitHub Issue에서 Jira 자동 생성
 
@@ -65,11 +71,12 @@ Resolves #8
 
 ## 완료 조건
 
-- Jira Task와 GitHub Issue가 서로 연결되어 있습니다.
+- GitHub-first 업무는 Jira Task와 GitHub Issue가 서로 연결되어 있습니다.
 - branch, commit, PR 제목에 같은 Jira 키가 있습니다.
 - Gitmoji PR 제목 검사와 `ai-quality`가 통과합니다.
 - 리뷰 승인과 모든 검토 대화 해결을 완료합니다.
-- PR merge 후 GitHub Issue와 Jira Task가 완료되고 Slack 알림이 성공합니다.
+- PR merge 후 Jira Task가 완료되고, GitHub-first 업무는 GitHub Issue도 닫히며
+  Slack 알림이 성공합니다.
 - Jira 업무는 삭제하지 않고 `완료` 상태로 전환하며 Team Board의
   `Show completed tickets`에서 완료 기록을 확인할 수 있습니다.
 
