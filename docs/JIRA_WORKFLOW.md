@@ -85,6 +85,13 @@ Resolves #8
 [integration 문서](https://github.com/DodamDodam-Capstone/integration/blob/main/docs/JIRA_GITHUB_INTEGRATION.md)를
 기준으로 합니다.
 
+## 팀 적용 시점
+
+팀원 초대 후 GitHub visible Team `ai`에 AI 담당자를 넣고 이 저장소에
+`Write`를 부여합니다. 팀원이 2명 이상일 때만 CODEOWNERS와 리뷰 자동 배정을
+사용합니다. Jira에는 `AI` Team을 연결하되 `Assignee`는 실제 담당 개인으로
+유지합니다. 빈 팀을 미리 만들거나 Team filter부터 적용하지 않습니다.
+
 ## 초기 자동화 검증
 
 - 2026-08-22: `development` 병합 후 GitHub Issue 종료, Jira Task 완료 및
