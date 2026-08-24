@@ -1,5 +1,9 @@
 # 기여 가이드
 
+업무를 시작하기 전에
+[`docs/TEAM_WORKFLOW_GUIDE.md`](docs/TEAM_WORKFLOW_GUIDE.md)에서 Jira-first와
+GitHub-first 중 한 가지 경로를 선택합니다.
+
 PR 제목은 `<gitmoji> <type>(optional-scope): <description>` 형식을 사용합니다.
 
 예시:
