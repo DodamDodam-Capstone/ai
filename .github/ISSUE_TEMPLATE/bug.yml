@@ -3,6 +3,9 @@ description: "재현 가능한 AI 결함을 등록합니다. Jira Bug가 자동 
 title: "[AI] "
 labels: ["bug"]
 body:
+  - type: markdown
+    attributes:
+      value: "Jira Bug가 아직 없을 때만 사용합니다. 이미 있으면 해당 Jira 키로 바로 작업하세요."
   - type: input
     id: parent_jira
     attributes:

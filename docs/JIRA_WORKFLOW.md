@@ -3,12 +3,18 @@
 Jira 사이트는 `dodamdodam.atlassian.net`, 프로젝트 키는 `SCRUM`입니다.
 AI 업무는 Jira와 GitHub 제목에 `[AI]`를 사용합니다.
 
+처음 참여하는 팀원은 실제 예시와 체크리스트가 포함된
+[`TEAM_WORKFLOW_GUIDE.md`](TEAM_WORKFLOW_GUIDE.md)를 먼저 읽습니다. Jira Task가
+이미 있으면 GitHub Issue Form을 다시 사용하지 않고, 해당 Jira 키를 branch와
+PR에 직접 사용합니다.
+
 ## Epic과 Task
 
 - 여러 저장소가 참여하는 Jira Epic: `[EPIC] <사용자 가치 또는 목표>`
 - AI Jira Task: `[AI] <구현할 결과>`
 - GitHub Issue: `SCRUM-<번호> [AI] <Jira Task와 같은 제목>`
-- Jira Task 하나와 AI GitHub Issue 하나를 1:1로 연결합니다.
+- GitHub-first 업무는 Jira Task 하나와 AI GitHub Issue 하나를 1:1로
+  연결합니다. Jira-first 업무는 이미 있는 Task 키로 바로 개발합니다.
 
 ## GitHub Issue에서 Jira 자동 생성
 
@@ -21,14 +27,18 @@ AI 업무는 Jira와 GitHub 제목에 `[AI]`를 사용합니다.
 4. `#ai-actions`에 Source GitHub Issue와 Target Jira 업무 알림 전송
 
 Epic 아래에 둘 업무는 Form의 `상위 Jira 키`에 `SCRUM-<번호>`를 입력합니다.
-동기화가 실패하면 Actions의 `GitHub Issue to Jira`를 `Run workflow`로 열어 Issue
-번호를 넣어 재시도합니다. 이미 Jira 키가 있거나 `jira-skip` 레이블이 있는
-Issue는 생성하지 않습니다.
+동기화가 실패하면 Actions의 `GitHub Issue to Jira`에서 `main`을 선택하고 Issue
+번호를 넣어 재시도합니다. `jira-skip` 레이블이 있는 Issue는 생성하지 않습니다.
+제목에 Jira 키가 있더라도 이 GitHub Issue의 고유 Jira 레이블과 일치할 때만 기존
+업무를 재사용합니다.
 
 저장소가 public이므로 자동 생성은 GitHub의 `OWNER`, `MEMBER`, `COLLABORATOR`가
 연 Issue에만 실행됩니다. 외부 사용자가 등록한 Issue는 팀원이 내용을 검토한 뒤
 `Run workflow`로 승인·동기화합니다. 재실행해도 Jira 업무와 링크 댓글은 중복
 생성되지 않으며 Slack 성공 알림 완료는 `jira-notified` 레이블로 표시됩니다.
+secret을 사용하는 중앙 helper는 CI를 통과한 integration commit 전체 SHA로
+고정합니다. Task·Bug 유형 레이블이 충돌하면 잘못된 유형을 만들지 않고 실패
+알림을 보냅니다.
 
 예시:
 
@@ -61,12 +71,35 @@ Resolves #8
 
 ## 완료 조건
 
-- Jira Task와 GitHub Issue가 서로 연결되어 있습니다.
+- GitHub-first 업무는 Jira Task와 GitHub Issue가 서로 연결되어 있습니다.
 - branch, commit, PR 제목에 같은 Jira 키가 있습니다.
 - Gitmoji PR 제목 검사와 `ai-quality`가 통과합니다.
 - 리뷰 승인과 모든 검토 대화 해결을 완료합니다.
-- PR merge 후 GitHub Issue와 Jira Task가 완료되고 Slack 알림이 성공합니다.
+- PR merge 후 Jira Task가 완료되고, GitHub-first 업무는 GitHub Issue도 닫히며
+  Slack 알림이 성공합니다.
+- Jira 업무는 삭제하지 않고 `완료` 상태로 전환하며 Team Board의
+  `Show completed tickets`에서 완료 기록을 확인할 수 있습니다.
+
+## 장기 브랜치 병합 원칙
+
+- `feature/*`, `fix/*` → `development`: squash merge로 작업 단위를 정리합니다.
+- `development` → `main`: merge commit으로 두 장기 브랜치의 계보를 보존합니다.
+- 두 보호 브랜치에는 직접 push와 force push를 사용하지 않습니다.
+- 초기 독립 squash로 갈라진 계보는 commit을 삭제하지 않고 보호된 동기화 PR로
+  한 번 연결합니다.
 
 전체 Epic·하위 이슈·Team Board 운영 규칙은
 [integration 문서](https://github.com/DodamDodam-Capstone/integration/blob/main/docs/JIRA_GITHUB_INTEGRATION.md)를
 기준으로 합니다.
+
+## 팀 적용 시점
+
+팀원 초대 후 GitHub visible Team `ai`에 AI 담당자를 넣고 이 저장소에
+`Write`를 부여합니다. 팀원이 2명 이상일 때만 CODEOWNERS와 리뷰 자동 배정을
+사용합니다. Jira에는 `AI` Team을 연결하되 `Assignee`는 실제 담당 개인으로
+유지합니다. 빈 팀을 미리 만들거나 Team filter부터 적용하지 않습니다.
+
+## 초기 자동화 검증
+
+- 2026-08-22: `development` 병합 후 GitHub Issue 종료, Jira Task 완료 및
+  `#ai-actions` Slack 알림을 확인합니다.

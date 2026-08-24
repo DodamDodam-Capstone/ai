@@ -3,6 +3,7 @@ name: Jira Key
 on:
   pull_request:
     branches: [development, main]
+    types: [opened, edited, synchronize, reopened]
 
 permissions:
   contents: read
@@ -10,6 +11,7 @@ permissions:
 jobs:
   jira-issue-key:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       PR_TITLE: ${{ github.event.pull_request.title }}
       HEAD_REF: ${{ github.head_ref }}
@@ -30,12 +32,24 @@ jobs:
           if actor == "dependabot[bot]" or head.startswith("bot/"):
               print("자동화 PR은 Jira 키 검사를 건너뜁니다.")
               raise SystemExit(0)
-          keys = set(re.findall(r"\bSCRUM-\d+\b", f"{head} {title}"))
-          if len(keys) != 1:
-              print("PR 제목과 브랜치에는 정확히 하나의 SCRUM Jira 키가 필요합니다.")
+          head_keys = re.findall(r"\bSCRUM-\d+\b", head)
+          title_keys = re.findall(r"\bSCRUM-\d+\b", title)
+          if head == "development" and base == "main":
+              if len(title_keys) != 1:
+                  print("릴리스 PR 제목에는 sprint 또는 Epic Jira 키가 정확히 하나 필요합니다.")
+                  raise SystemExit(1)
+              print(f"릴리스 Jira 키 검증 완료: {title_keys[0]}")
+              raise SystemExit(0)
+
+          if len(head_keys) != 1 or len(title_keys) != 1:
+              print("PR 제목과 브랜치 각각에 SCRUM Jira 키가 정확히 하나 필요합니다.")
               raise SystemExit(1)
-          if base == "development" and "[AI]" not in title:
-              print("AI 작업 PR 제목에는 [AI]가 필요합니다.")
+          if head_keys[0] != title_keys[0]:
+              print("PR 제목과 브랜치의 Jira 키가 일치해야 합니다.")
               raise SystemExit(1)
-          print(f"Jira 키 검증 완료: {next(iter(keys))}")
+          prefixes = set(re.findall(r"\[(?:FE|BE|AI|INT)\]", title))
+          if base == "development" and prefixes != {"[AI]"}:
+              print("AI 작업 PR 제목에는 [AI]만 정확히 표시해야 합니다.")
+              raise SystemExit(1)
+          print(f"Jira 키 검증 완료: {head_keys[0]}")
           PY

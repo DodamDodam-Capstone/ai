@@ -10,21 +10,20 @@ permissions:
 
 jobs:
   dispatch:
+    if: github.ref == 'refs/heads/main'
     name: notify-integration
     runs-on: ubuntu-latest
-    env:
-      INTEGRATION_APP_ID: ${{ secrets.INTEGRATION_APP_ID }}
-      INTEGRATION_APP_PRIVATE_KEY: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
+    timeout-minutes: 5
     steps:
       - name: Create Integration Bot token
-        if: env.INTEGRATION_APP_ID != '' && env.INTEGRATION_APP_PRIVATE_KEY != ''
         id: app-token
-        uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ env.INTEGRATION_APP_ID }}
-          private-key: ${{ env.INTEGRATION_APP_PRIVATE_KEY }}
+          client-id: Iv23liyibAu0H0gOIi2f
+          private-key: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}
           owner: DodamDodam-Capstone
           repositories: integration
+          permission-contents: write
 
       - name: Notify integration repository
         if: steps.app-token.outputs.token != ''
@@ -54,7 +53,3 @@ jobs:
               },
           }))
           PY
-
-      - name: Integration Bot readiness
-        if: env.INTEGRATION_APP_ID == '' || env.INTEGRATION_APP_PRIVATE_KEY == ''
-        run: echo "Integration Bot credentials are not configured; dispatch skipped."
