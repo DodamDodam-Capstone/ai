@@ -29,6 +29,9 @@ jobs:
           head = os.environ["HEAD_REF"]
           title = os.environ["PR_TITLE"]
           base = os.environ["BASE_REF"]
+          if base == "main" and head != "development":
+              print("main 대상 PR은 development 브랜치에서만 생성할 수 있습니다.")
+              raise SystemExit(1)
           if actor == "dependabot[bot]" or head.startswith("bot/"):
               print("자동화 PR은 Jira 키 검사를 건너뜁니다.")
               raise SystemExit(0)
