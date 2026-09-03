@@ -67,7 +67,8 @@ Resolves #8
 ```
 
 일반 작업 PR의 대상은 `development`입니다. `development` 반영과 검증이 끝난
-뒤 sprint 승격 PR로 `main`에 반영합니다.
+뒤 sprint 승격 PR로 `main`에 반영합니다. `main` 대상 PR의 source branch는
+항상 `development`여야 하며 hotfix도 먼저 `development`에 반영합니다.
 
 ## 완료 조건
 
@@ -84,6 +85,7 @@ Resolves #8
 
 - `feature/*`, `fix/*` → `development`: squash merge로 작업 단위를 정리합니다.
 - `development` → `main`: merge commit으로 두 장기 브랜치의 계보를 보존합니다.
+- `main` 대상 PR은 `development`에서만 생성합니다.
 - 두 보호 브랜치에는 직접 push와 force push를 사용하지 않습니다.
 - 초기 독립 squash로 갈라진 계보는 commit을 삭제하지 않고 보호된 동기화 PR로
   한 번 연결합니다.

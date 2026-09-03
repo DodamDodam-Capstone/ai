@@ -17,10 +17,10 @@
 
 ## 2. 시작 경로를 먼저 선택합니다
 
-| 상황 | 작업 방법 |
-| --- | --- |
+| 상황                         | 작업 방법                                                                |
+| ---------------------------- | ------------------------------------------------------------------------ |
 | Jira `[AI]` Task가 이미 있음 | Jira 키로 바로 branch와 PR을 만듭니다. GitHub Task Form은 열지 않습니다. |
-| Jira Task가 없음 | GitHub의 `AI Task` 또는 `AI Bug` Form으로 Jira 업무를 자동 생성합니다. |
+| Jira Task가 없음             | GitHub의 `AI Task` 또는 `AI Bug` Form으로 Jira 업무를 자동 생성합니다.   |
 
 이미 있는 Jira Task와 GitHub Issue Form을 함께 사용하면 Jira Task가 중복 생성될
 수 있습니다. 한 업무에는 한 가지 시작 경로만 사용합니다.
@@ -141,6 +141,8 @@ API token, 모델 저장소 credential은 첨부하지 않습니다.
 - 마지막 push를 하지 않은 다른 팀원의 승인을 받습니다.
 - 모든 review conversation을 해결한 뒤 squash merge합니다.
 - `development`와 `main`에는 직접 push하지 않습니다.
+- `main` 대상 PR은 `development`에서만 만들며 긴급 수정도 같은 승격 경로를
+  사용합니다.
 
 ## 7. 완료 확인
 
