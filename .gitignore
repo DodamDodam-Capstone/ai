@@ -40,3 +40,5 @@ Thumbs.db
 # Obsidian (per-machine workspace state)
 .obsidian/
 
+test.wav
+*.m4a

@@ -40,17 +40,21 @@ class ClovaSTT(STTEngine):
         self._client = httpx.AsyncClient(timeout=15.0)
 
     async def transcribe(self, audio: bytes, *, sample_rate: int = 16000) -> STTResult:
+        boostings = "\t".join(DEFAULT_BOOST)
+
         resp = await self._client.post(
-            f"{self.invoke_url}/recognizer/upload",
-            headers={"X-CLOVASPEECH-API-KEY": self.secret},
-            files={"media": ("turn.wav", audio, "audio/wav")},
-            data={
-                "params": (
-                    '{"language":"ko-KR","completion":"sync",'
-                    f'"boostings":{_boost_json()}}}'
-                )
+            self.invoke_url,
+            headers={
+                "X-CLOVASPEECH-API-KEY": self.secret,
+                "Content-Type": "application/octet-stream",
             },
+            params={
+                "lang": "Kor",
+                "boostings": boostings,
+            },
+            content=audio,
         )
+
         resp.raise_for_status()
         data = resp.json()
 
