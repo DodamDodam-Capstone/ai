@@ -18,8 +18,10 @@ PR에 직접 사용합니다.
 
 ## GitHub Issue에서 Jira 자동 생성
 
-`New issue`에서 `AI Task` 또는 `AI Bug` Form을 사용합니다. Issue가 열리면
-`GitHub Issue to Jira` workflow가 다음을 자동 처리합니다.
+`New issue`에서 `AI Task` 또는 `AI Bug` Form을 사용합니다. 신뢰된 작성자의
+Issue는 열린 직후 처리됩니다. Jira 키가 붙지 않으면 팀원이 유형과 내용을
+검토한 뒤 `jira-sync` 레이블을 추가하며, 이때 `GitHub Issue to Jira` workflow가
+다음을 자동 처리합니다.
 
 1. Jira `SCRUM` 프로젝트에 `[AI]` Task 또는 Bug 생성
 2. GitHub Issue 제목을 `SCRUM-<번호> [AI] ...`로 변경
@@ -32,10 +34,12 @@ Epic 아래에 둘 업무는 Form의 `상위 Jira 키`에 `SCRUM-<번호>`를 �
 제목에 Jira 키가 있더라도 이 GitHub Issue의 고유 Jira 레이블과 일치할 때만 기존
 업무를 재사용합니다.
 
-저장소가 public이므로 자동 생성은 GitHub의 `OWNER`, `MEMBER`, `COLLABORATOR`가
-연 Issue에만 실행됩니다. 외부 사용자가 등록한 Issue는 팀원이 내용을 검토한 뒤
-`Run workflow`로 승인·동기화합니다. 재실행해도 Jira 업무와 링크 댓글은 중복
-생성되지 않으며 Slack 성공 알림 완료는 `jira-notified` 레이블로 표시됩니다.
+저장소가 public이므로 열린 직후 자동 생성은 GitHub의 `OWNER`, `MEMBER`,
+`COLLABORATOR`가 연 Issue에만 실행됩니다. GitHub가 작성자를 `CONTRIBUTOR` 또는
+`NONE`으로 분류했거나 외부 사용자가 등록한 Issue는 팀원이 내용을 검토하고
+`task` 또는 `bug` 유형 레이블을 확인한 뒤 `jira-sync`를 추가해 승인·동기화합니다.
+재실행해도 Jira 업무와 링크 댓글은 중복 생성되지 않으며 Slack 성공 알림 완료는
+`jira-notified` 레이블로 표시됩니다.
 secret을 사용하는 중앙 helper는 CI를 통과한 integration commit 전체 SHA로
 고정합니다. Task·Bug 유형 레이블이 충돌하면 잘못된 유형을 만들지 않고 실패
 알림을 보냅니다.
