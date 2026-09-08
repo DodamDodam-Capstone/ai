@@ -5,7 +5,7 @@ labels: ["task"]
 body:
   - type: markdown
     attributes:
-      value: "Jira Task가 아직 없을 때만 사용합니다. 생성 직후 Jira 키가 제목 앞에 자동 추가되고 Slack에 연결 결과가 전송됩니다."
+      value: "Jira Task가 아직 없을 때만 사용합니다. Jira 키와 Slack 알림이 바로 추가되지 않으면 팀원이 내용을 검토한 뒤 jira-sync 레이블을 추가하세요."
   - type: input
     id: parent_jira
     attributes:

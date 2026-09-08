@@ -30,3 +30,5 @@
 - [ ] PR 제목이 `🐛 fix: 설명` 형식을 따릅니다.
 - [ ] PR 제목과 브랜치에 같은 `SCRUM-번호`가 있습니다.
 - [ ] AI 작업 PR 제목에 `[AI]`가 있습니다.
+- [ ] 일반 작업의 base는 `development`이며 `main` 승격의 source는
+      `development`입니다.

@@ -19,8 +19,13 @@ commit, PR 예시가 포함된
 
 기능 변경은 작업 브랜치에서 `development`로 squash merge합니다. 검증된
 `development`는 보호된 PR과 사람의 승인을 거쳐 merge commit으로 `main`에
-승격합니다. `main` 반영이 완료되면 Bot PR이 integration의 `development`에서
-AI commit SHA를 자동으로 갱신합니다.
+승격합니다. `main` 대상 PR의 source branch는 `development`만 허용하며 긴급
+수정도 먼저 `development`에 반영합니다. `main` 반영이 완료되면 Bot PR이
+integration의 `development`에서 AI commit SHA를 자동으로 갱신합니다.
+
+2026-09-03에는 기존 AI 작업을 삭제하거나 재작성하지 않고, 먼저 반영되어 있던
+`main` 계보를 merge commit으로 `development`에 연결해 장기 브랜치를
+정렬했습니다.
 
 # 파이프라인
 
