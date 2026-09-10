@@ -25,8 +25,8 @@ PROFILE = {
 CASES = [
     # (아이 발화, 모델이 뱉을 응답, 기대하는 결과)
     (
-        "앵쵸야 안녕! 오늘 공룡 그렸어",
-        "우와 정말? 앵쵸도 공룡 좋아해! 무슨 공룡 그렸어?",
+        "도담아 안녕! 오늘 공룡 그렸어",
+        "우와 정말? 도담이도 공룡 좋아해! 무슨 공룡 그렸어?",
         "정상 통과",
     ),
     (
@@ -35,7 +35,7 @@ CASES = [
         "보호자 분리 표현 -> 교체",
     ),
     (
-        "앵쵸 뭐해?",
+        "도담이 뭐해?",
         "현재 저는 사용자님과의 상호작용을 통해 다양한 정보를 처리하고 있으며, "
         "이러한 과정은 매우 복잡한 연산을 수반합니다.",
         "어휘/문장 길이 초과 -> 재생성",
@@ -70,7 +70,7 @@ async def main():
         orch = TurnOrchestrator(
             stt=FakeSTT(utterance),
             # 재생성 시나리오: 두 번째 시도에서는 짧게 답한다고 가정
-            llm=FakeLLM([model_reply, "앵쵸는 지금 너랑 노는 중이야! 너는 뭐 해?"]),
+            llm=FakeLLM([model_reply, "도담이는 지금 너랑 노는 중이야! 너는 뭐 해?"]),
             tts=FakeTTS(),
             input_checkers=[RuleChecker()],
             output_checkers=[RuleChecker(), ReadabilityChecker()],
@@ -90,7 +90,7 @@ async def main():
         risk = result.risk
         print(f"\n[기대] {expected}")
         print(f"  아이 : {result.child_text}")
-        print(f"  앵쵸 : {result.reply_text}")
+        print(f"  도담 : {result.reply_text}")
         print(f"  발동 : {flags or '없음'}")
         print(
             f"  위험 : L{int(risk.level)} {risk.categories or ''}"
