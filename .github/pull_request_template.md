@@ -11,6 +11,7 @@
 
 <!-- 예: Resolves #123 -->
 <!-- Jira-first 업무로 GitHub Issue가 없으면 비워 둡니다. -->
+<!-- Issue 종료 키워드는 development 대상 작업 PR에만 적습니다. main 승격 PR은 비워 둡니다. -->
 
 ## 변경 사항
 
