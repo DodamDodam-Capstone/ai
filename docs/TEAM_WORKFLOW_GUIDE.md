@@ -116,7 +116,7 @@ Jira: https://dodamdodam.atlassian.net/browse/SCRUM-209
 Resolves #123
 ```
 
-PR merge 후 `close-linked-issues`가 `ai#123`을 닫고, Jira Automation이
+`development` 병합 후 `close-linked-issues`가 `ai#123`을 닫고, Jira Automation이
 `SCRUM-209`를 `완료`로 전환합니다.
 
 ## 5. Bug 업무 예시
@@ -138,13 +138,16 @@ API token, 모델 저장소 credential은 첨부하지 않습니다.
 - `development` 대상 PR 제목에는 `[AI]`만 정확히 하나 넣습니다.
 - Gitmoji는 의미에 맞게 자유롭게 선택하고 `feat`, `fix`, `docs`, `test` 등의
   Conventional Commit type을 사용합니다.
-- GitHub Issue가 있을 때만 같은 저장소 Issue를 `Resolves #번호`로 연결합니다.
+- GitHub Issue가 있을 때만 `development` 대상 작업 PR에 같은 저장소 Issue를
+  `Resolves #번호`로 연결합니다.
 - `ai-quality`와 모든 필수 검사를 통과합니다.
 - 마지막 push를 하지 않은 다른 팀원의 승인을 받습니다.
 - 모든 review conversation을 해결한 뒤 squash merge합니다.
 - `development`와 `main`에는 직접 push하지 않습니다.
 - `main` 대상 PR은 `development`에서만 만들며 긴급 수정도 같은 승격 경로를
   사용합니다.
+- `main` 승격 PR에는 `Resolves #번호`, `Closes #번호`, `Fixes #번호`를
+  적지 않습니다. GitHub는 기본 브랜치 병합 시 이 키워드로 Issue를 닫습니다.
 
 ## 7. 완료 확인
 
@@ -163,8 +166,11 @@ API token, 모델 저장소 credential은 첨부하지 않습니다.
   Jira`를 `main`에서 Issue 번호로 재실행합니다.
 - 중복 Jira Task가 의심됨: 새 Task를 만들지 말고 `jira-linked` 댓글과 Jira의
   `github-ai-<issue-number>` 레이블을 확인합니다.
-- Issue가 닫히지 않음: PR 본문의 `Resolves #번호`, 같은 저장소 Issue인지,
-  `Close Linked Issues` 실행 결과를 확인합니다.
+- Issue가 닫히지 않음: 작업 PR의 대상이 `development`인지, 본문의
+  `Resolves #번호`가 같은 저장소 Issue인지, `Close Linked Issues` 실행 결과를
+  확인합니다.
+- Jira Task가 완료되지 않음: PR 대상이 `development`인지, PR 제목의 Jira 키가
+  해당 Task 키와 일치하는지, Jira Automation 감사 로그를 확인합니다.
 
 Organization 전체 흐름과 다른 저장소 예시는
 [integration 팀 가이드](https://github.com/DodamDodam-Capstone/integration/blob/main/docs/TEAM_WORKFLOW_GUIDE.md)를

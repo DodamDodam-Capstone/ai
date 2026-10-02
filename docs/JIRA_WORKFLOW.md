@@ -80,8 +80,11 @@ Resolves #8
 - branch, commit, PR 제목에 같은 Jira 키가 있습니다.
 - Gitmoji PR 제목 검사와 `ai-quality`가 통과합니다.
 - 리뷰 승인과 모든 검토 대화 해결을 완료합니다.
-- PR merge 후 Jira Task가 완료되고, GitHub-first 업무는 GitHub Issue도 닫히며
-  Slack 알림이 성공합니다.
+- AI 저장소의 작업 PR이 `development`에 병합되고 PR 제목의 Jira 키가 Task와
+  같으면 Jira Task가 완료됩니다. GitHub-first 업무는 PR 본문의 `Resolves #번호`로
+  같은 저장소 GitHub Issue도 닫고 Slack 알림을 확인합니다.
+- `development` → `main` 승격이나 integration의 컴포넌트 갱신은 AI Task를
+  완료시키지 않습니다.
 - Jira 업무는 삭제하지 않고 `완료` 상태로 전환하며 Team Board의
   `Show completed tickets`에서 완료 기록을 확인할 수 있습니다.
 

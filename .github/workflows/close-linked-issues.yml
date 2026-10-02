@@ -16,8 +16,7 @@ jobs:
   close-linked-issues:
     if: >-
       github.event.pull_request.merged == true &&
-      (github.event.pull_request.base.ref == 'development' ||
-       github.event.pull_request.base.ref == 'main')
+      github.event.pull_request.base.ref == 'development'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
