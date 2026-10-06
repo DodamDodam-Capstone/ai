@@ -5,7 +5,16 @@ API 키 없이 파이프라인 로직을 검증하기 위한 가짜 구현체.
 
 from __future__ import annotations
 
-from core.interfaces import LLMEngine, LLMResult, STTEngine, STTResult, TTSEngine
+from core.interfaces import (
+    EmotionClassifier,
+    EmotionLabel,
+    EmotionResult,
+    LLMEngine,
+    LLMResult,
+    STTEngine,
+    STTResult,
+    TTSEngine,
+)
 
 
 class FakeSTT(STTEngine):
@@ -38,3 +47,25 @@ class FakeTTS(TTSEngine):
 
     async def synthesize(self, text: str, *, voice: str) -> bytes:
         return text.encode("utf-8")
+
+
+class FakeEmotionClassifier(EmotionClassifier):
+    name = "fake_emotion"
+
+    def __init__(
+        self,
+        label: EmotionLabel = EmotionLabel.NEUTRAL,
+        confidence: float | None = 0.9,
+    ):
+        self.label = label
+        self.confidence = confidence
+        # 호출 여부 자체가 검증 대상이다. 빈 발화에서는 불려서는 안 된다.
+        self.calls: list[str] = []
+
+    async def classify(
+        self, text: str, *, context: dict | None = None
+    ) -> EmotionResult:
+        self.calls.append(text)
+        return EmotionResult(
+            label=self.label, confidence=self.confidence, classifier=self.name
+        )
