@@ -13,9 +13,14 @@ STT -> 안전(입력) -> LLM -> 안전(출력) -> TTS
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
+import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from core.interfaces import (
+    EmotionClassifier,
+    EmotionSignal,
     LLMEngine,
     RiskLevel,
     RiskSignal,
@@ -26,7 +31,40 @@ from core.interfaces import (
     Verdict,
 )
 from context.persona import PERSONA, build_dynamic_context
+from emotion.signals import to_signal
 from safety.checkers import SAFE_FALLBACK
+
+_log = logging.getLogger(__name__)
+
+# 감정 분류 태스크를 담아두는 자리. 오케스트레이터 인스턴스가 아니라 모듈에 두는 이유는
+# 이 클래스가 턴마다 새로 생성되는 패턴(demo.py 참고)이라, 인스턴스에 두면 run() 이
+# 반환되는 순간 레지스트리가 함께 사라지기 때문이다. 참조가 끊기면 이벤트 루프가
+# 약한 참조만 들고 있다가 태스크를 완료 전에 수거할 수 있다.
+_emotion_tasks: set[asyncio.Task] = set()
+
+
+def _spawn_emotion(coro) -> None:
+    """감정 분류를 백그라운드 태스크로 띄우고 참조를 유지한다.
+
+    Args:
+        coro: 실행할 코루틴.
+    """
+    task = asyncio.create_task(coro)
+    _emotion_tasks.add(task)
+    # 예외는 코루틴 안에서 이미 흡수하므로 여기서는 참조만 정리한다.
+    task.add_done_callback(_emotion_tasks.discard)
+
+
+async def drain_emotion_tasks() -> None:
+    """떠 있는 감정 분류 태스크가 끝날 때까지 기다린다.
+
+    asyncio.run() 으로 끝나는 짧은 스크립트(demo.py, smoke_gemini.py)와 테스트는
+    메인 코루틴이 반환되는 순간 루프를 닫으면서 미완료 태스크를 그대로 버린다.
+    장수 서버에서는 문제가 덜하지만, 그 환경에서 감정 로그가 안 찍히는 것을 버그로
+    오인하지 않으려면 끝에서 한 번 비워줘야 한다.
+    """
+    while _emotion_tasks:
+        await asyncio.gather(*tuple(_emotion_tasks), return_exceptions=True)
 
 
 @dataclass
@@ -34,6 +72,9 @@ class TurnResult:
     """한 턴의 최종 산출물과 P3 분석에 필요한 계측값.
 
     Attributes:
+        turn_id: 이 턴의 식별자. 턴 시작 시점에 발급한다. 로그 적재 시점이 아니라
+            여기서 발급하는 이유는, 비동기로 갈라지는 감정 신호가 같은 값을 실어야
+            백엔드가 둘을 상관지을 수 있기 때문이다.
         child_text: 아이 발화. STT 로 받아온 텍스트.
         reply_text: 안전 검사까지 통과한 최종 응답. 차단 시 대체 문장.
         audio: TTS 결과. synthesize=False 면 None.
@@ -49,6 +90,7 @@ class TurnResult:
 
     child_text: str
     reply_text: str
+    turn_id: str = ""
     audio: bytes | None = None
     escalate: bool = False
     risk: RiskSignal = field(default_factory=RiskSignal)
@@ -78,6 +120,8 @@ class TurnOrchestrator:
         input_checkers: list[SafetyChecker],
         output_checkers: list[SafetyChecker],
         max_regenerations: int = 1,
+        emotion_classifier: EmotionClassifier | None = None,
+        on_emotion: Callable[[EmotionSignal], None] | None = None,
     ):
         """엔진 구현체를 주입받아 오케스트레이터를 구성.
 
@@ -88,6 +132,9 @@ class TurnOrchestrator:
             input_checkers: 아이 발화를 검사할 체커들.
             output_checkers: 인공지능 응답을 검사할 체커들.
             max_regenerations: 출력 필터 실패 시 재생성 횟수. 총 시도 횟수는 값 + 1.
+            emotion_classifier: 감정 분류기. None 이면 감정 분류를 하지 않는다.
+            on_emotion: 조립된 신호를 받을 콜백. 오케스트레이터가 로거를 직접 import
+                하지 않도록 적재는 호출부에 맡긴다. None 이면 감정 분류를 하지 않는다.
         """
         self.stt = stt
         self.llm = llm
@@ -95,6 +142,8 @@ class TurnOrchestrator:
         self.input_checkers = input_checkers
         self.output_checkers = output_checkers
         self.max_regenerations = max_regenerations
+        self.emotion_classifier = emotion_classifier
+        self.on_emotion = on_emotion
 
     async def run(
         self,
@@ -104,6 +153,7 @@ class TurnOrchestrator:
         history: list[tuple[str, str]],
         memory: list[str] | None = None,
         synthesize: bool = True,
+        child_id: str = "",
     ) -> TurnResult:
         """오디오 한 덩어리를 받아 응답 오디오까지 생성 후 반환.
 
@@ -113,12 +163,15 @@ class TurnOrchestrator:
             history: 최근 대화 이력. [(역할, 텍스트), ...] 형식.
             memory: 장기기억에서 검색해온 문장들. 없으면 None.
             synthesize: False 면 TTS 를 건너뜁니다. 텍스트만 필요한 벤치마크에서 사용.
+            child_id: 익명화된 아이 식별자. 감정 신호에 실린다. 페르소나용 profile 과
+                섞지 않으려고 따로 받는다.
 
         Returns:
             이번 턴의 결과를 담은 TurnResult.
         """
         timings: dict[str, float] = {}  # 지연률 측정용
         events: list[dict] = []  # 이벤트 확인용
+        turn_id = str(uuid.uuid4())
 
         # 1. STT
         t = time.perf_counter()  # 성능 검증용 타이머
@@ -132,7 +185,16 @@ class TurnOrchestrator:
             return TurnResult(
                 child_text="",
                 reply_text="잘 못 들었어! 다시 한 번 말해줄래?",
+                turn_id=turn_id,
                 timings_ms=timings,
+            )
+
+        # 1-b. 감정 분류 (비동기, 안전 체계와 무관)
+        # 조기 반환 뒤에 두면 빈 발화 스킵이 따로 분기를 짜지 않아도 성립한다.
+        # 결과를 기다리지 않으므로 아래 구간들의 지연에 가산되지 않는다.
+        if self.emotion_classifier is not None and self.on_emotion is not None:
+            _spawn_emotion(
+                self._classify_emotion(child_text, turn_id=turn_id, child_id=child_id)
             )
 
         # 2. 입력 안전 검사 (병렬)
@@ -243,6 +305,7 @@ class TurnOrchestrator:
         return TurnResult(
             child_text=child_text,
             reply_text=reply,
+            turn_id=turn_id,
             audio=audio_out,
             escalate=escalate,
             risk=risk,
@@ -251,6 +314,26 @@ class TurnOrchestrator:
             timings_ms=timings,
             tokens=tokens,
         )
+
+    async def _classify_emotion(
+        self, text: str, *, turn_id: str, child_id: str
+    ) -> None:
+        """감정을 분류해 신호를 콜백에 넘긴다.
+
+        예외를 여기서 흡수한다. 감정 분류의 실패가 안전 판정이나 응답 생성에 영향을
+        주지 않는다는 것이 이 기능의 불변식이다. 다만 조용히 사라지면 안 되므로
+        로그에는 남긴다.
+
+        Args:
+            text: 아이 발화.
+            turn_id: 이 턴의 식별자.
+            child_id: 익명화된 아이 식별자.
+        """
+        try:
+            result = await self.emotion_classifier.classify(text)
+            self.on_emotion(to_signal(result, turn_id=turn_id, child_id=child_id))
+        except Exception:
+            _log.exception("감정 분류 실패 turn_id=%s", turn_id)
 
     async def _screen_output(self, text: str, events: list[dict], attempt: int = 0):
         """인공지능 응답을 출력 체커 전체에 병렬로 통과.
