@@ -4,10 +4,10 @@
   hard_test_100.csv의 CLOVA 수치와 바로 비교할 수 있게 한다.
 - 결과는 한 샘플씩 append 저장하므로 중단 후 다시 실행하면 이어서 평가한다.
 - 기본 모델은 1.7B이며, QWEN_ASR_MODEL 환경변수로 다른 크기를 지정할 수 있다.
-  예) QWEN_ASR_MODEL=Qwen/Qwen3-ASR-0.6B .venv/bin/python evaluate_qwen_hard_test.py
+  예) QWEN_ASR_MODEL=Qwen/Qwen3-ASR-0.6B .venv/bin/python evaluate_qwen_hard_set.py
 - 모델 이름에 "mlx"가 들어 있으면 mlx-audio(Apple GPU)로 실행한다. transformers 버전이 달라
   별도 가상환경(.venv-mlx)을 사용한다.
-  예) QWEN_ASR_MODEL=mlx-community/Qwen3-ASR-0.6B-4bit .venv-mlx/bin/python evaluate_qwen_hard_test.py
+  예) QWEN_ASR_MODEL=mlx-community/Qwen3-ASR-0.6B-4bit .venv-mlx/bin/python evaluate_qwen_hard_set.py
 """
 
 import csv

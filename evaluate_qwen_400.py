@@ -1,16 +1,16 @@
 """Qwen3-ASR를 로컬에서 실행해 연령별 400개(7~10세 각 100개)를 평가하고 CLOVA와 비교한다.
 
 - 평가 대상과 정답은 CLOVA 400개 평가(logs/stt_age_400_validation_fresh.csv)와 동일하다.
-- CER / 정규화 / Semantic 평가는 evaluate_qwen_hard_test.py와 같은 함수를 사용한다.
+- CER / 정규화 / Semantic 평가는 evaluate_qwen_hard_set.py와 같은 함수를 사용한다.
 - 결과는 한 샘플씩 append 저장하므로 중단 후 다시 실행하면 이어서 평가한다.
-- 모델은 QWEN_ASR_MODEL 환경변수로 지정한다 (evaluate_qwen_hard_test.py 참고).
+- 모델은 QWEN_ASR_MODEL 환경변수로 지정한다 (evaluate_qwen_hard_set.py 참고).
 """
 
 import csv
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from evaluate_qwen_hard_test import (
+from evaluate_qwen_hard_set import (
     FIELDNAMES,
     MODEL_NAME,
     RESULT_PREFIX,

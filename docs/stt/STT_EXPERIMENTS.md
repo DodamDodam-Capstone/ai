@@ -134,7 +134,7 @@ python evaluate_whisper_100.py
 .venv/bin/python evaluate_qwen_400.py                     # Qwen3-ASR 1.7B
 QWEN_ASR_MODEL=Qwen/Qwen3-ASR-0.6B .venv/bin/python evaluate_qwen_400.py
 QWEN_ASR_MODEL=mlx-community/Qwen3-ASR-0.6B-4bit .venv-mlx/bin/python evaluate_qwen_400.py
-# hard test는 evaluate_qwen_hard_test.py를 같은 방식으로 실행
+# hard test는 evaluate_qwen_hard_set.py를 같은 방식으로 실행
 python evaluate_llama_postprocess_100.py                  # 로컬 Ollama llama3.1:8b 필요
 
 # 3) 요약 생성
