@@ -17,6 +17,7 @@ dist/
 
 # Virtual environments
 .venv/
+.venv-mlx/
 venv/
 env/
 
@@ -26,8 +27,11 @@ env/
 htmlcov/
 
 # Logs
-logs/
 *.log
+# summary 없는 이전 STT 실험 결과와 데모 대화 로그는 추적하지 않음
+logs/*.jsonl
+logs/stt_300_*.csv
+logs/stt_age_897_validation.csv
 
 # Editor / OS
 .idea/
@@ -40,3 +44,7 @@ Thumbs.db
 # Obsidian (per-machine workspace state)
 .obsidian/
 
+
+# STT 실험 산출물 (로컬 절대경로·AIHub 원본 전사문 포함, make_*.py로 재생성)
+stt_age_*_manifest.csv
+hard_test_100.csv

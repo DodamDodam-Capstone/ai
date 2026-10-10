@@ -1,0 +1,29 @@
+============================================================
+한국어 아동 음성 CLOVA STT 연령별 평가
+============================================================
+Manifest 평가 대상: 100개
+
+연령별 평가 대상
+7세: 25개
+8세: 25개
+9세: 25개
+10세: 25개
+
+Semantic 모델: jhgan/ko-sroberta-multitask
+
+========================================================================
+연령별 CLOVA STT CER
+========================================================================
+7세 | 25개 | Raw CER 11.40% | Normalized CER 11.40% | 문장 평균 CER 11.61% | Semantic 0.878 | Match 64.0%
+     Semantic 분류: MATCH 16 / REVIEW 7 / MISMATCH 2
+8세 | 25개 | Raw CER 15.26% | Normalized CER 15.26% | 문장 평균 CER 14.40% | Semantic 0.859 | Match 64.0%
+     Semantic 분류: MATCH 16 / REVIEW 4 / MISMATCH 5
+9세 | 25개 | Raw CER 13.43% | Normalized CER 13.43% | 문장 평균 CER 11.77% | Semantic 0.886 | Match 68.0%
+     Semantic 분류: MATCH 17 / REVIEW 3 / MISMATCH 5
+10세 | 25개 | Raw CER 13.98% | Normalized CER 14.01% | 문장 평균 CER 14.77% | Semantic 0.829 | Match 64.0%
+     Semantic 분류: MATCH 16 / REVIEW 4 / MISMATCH 5
+------------------------------------------------------------------------
+전체 Corpus Raw CER: 13.44%
+전체 Corpus Normalized CER: 13.45%
+연령 Macro Normalized CER: 13.53%
+LLM 검토용 로그: logs/stt_age_100_llm_review_fresh.jsonl
