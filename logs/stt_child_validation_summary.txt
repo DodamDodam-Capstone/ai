@@ -1,0 +1,24 @@
+DodamDodam CLOVA STT Evaluation
+========================================
+
+Dataset
+- AI-Hub 한국어 아동 음성 데이터
+- Split: Validation
+- Type: kor_free
+- 평가 샘플 수: 1000
+
+Result
+- 성공: 1000
+- 실패: 0
+- 평균 CER: 10.40%
+- 완전 일치: 407/1000
+- CER <= 5%: 468/1000
+- CER <= 10%: 603/1000
+- CER > 20%: 181/1000
+- 평균 처리 시간: 1.05 sec
+
+Generated At
+- 2026-09-09 14:39:56
+
+Source
+- logs/stt_child_validation.csv
