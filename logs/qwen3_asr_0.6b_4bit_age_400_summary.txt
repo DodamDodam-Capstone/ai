@@ -1,0 +1,38 @@
+========================================================================
+연령별 400개 평가: Qwen3-ASR vs CLOVA
+========================================================================
+모델: mlx-community/Qwen3-ASR-0.6B-4bit (local, mlx)
+CLOVA 결과: stt_age_400_validation_fresh.csv
+
+전체 | 400개
+  CER(문장 평균)  CLOVA  11.58% | Qwen  10.81%
+  정확 일치       CLOVA 166개    | Qwen 150개
+  Semantic 평균   CLOVA 0.886   | Qwen 0.886
+  Qwen CER 개선 144개 / 악화 133개 | Qwen Corpus CER 10.56% | Qwen 평균 처리 0.42초
+
+------------------------------------------------------------------------
+7세 | 100개
+  CER(문장 평균)  CLOVA  11.97% | Qwen  11.97%
+  정확 일치       CLOVA  34개    | Qwen  33개
+  Semantic 평균   CLOVA 0.886   | Qwen 0.869
+  Qwen CER 개선 31개 / 악화 42개 | Qwen Corpus CER 11.49% | Qwen 평균 처리 0.42초
+
+8세 | 100개
+  CER(문장 평균)  CLOVA  12.69% | Qwen  10.08%
+  정확 일치       CLOVA  41개    | Qwen  33개
+  Semantic 평균   CLOVA 0.865   | Qwen 0.878
+  Qwen CER 개선 40개 / 악화 31개 | Qwen Corpus CER 10.45% | Qwen 평균 처리 0.42초
+
+9세 | 100개
+  CER(문장 평균)  CLOVA   9.40% | Qwen  11.34%
+  정확 일치       CLOVA  54개    | Qwen  44개
+  Semantic 평균   CLOVA 0.911   | Qwen 0.888
+  Qwen CER 개선 29개 / 악화 33개 | Qwen Corpus CER 10.26% | Qwen 평균 처리 0.41초
+
+10세 | 100개
+  CER(문장 평균)  CLOVA  12.26% | Qwen   9.86%
+  정확 일치       CLOVA  37개    | Qwen  40개
+  Semantic 평균   CLOVA 0.881   | Qwen 0.911
+  Qwen CER 개선 44개 / 악화 27개 | Qwen Corpus CER 10.09% | Qwen 평균 처리 0.42초
+
+========================================================================
