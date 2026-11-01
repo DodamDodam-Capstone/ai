@@ -47,6 +47,20 @@ python smoke_gemini.py  # Gemini 실측 (지연/토큰/비용/캐시)
 python list_models.py   # 사용 가능한 모델 목록
 ```
 
+## STT·AI 내부 API 서버
+
+STT 는 Qwen3-ASR 1.7B 를 씁니다. 추가 의존성은 `requirements-stt.txt` 에 있습니다.
+
+```bash
+pip install -r requirements.txt -r requirements-stt.txt
+python -m stt_eval.evaluate --set age_400   # AI-Hub 아동 음성으로 STT 정확도 평가
+python -m stt_eval.be_format_check          # 백엔드 연동 형식으로 STT 검증
+uvicorn api.server:app --port 8000          # 백엔드가 호출하는 AI 내부 API
+```
+
+- 선정 근거·결과·재현 방법: [`docs/stt/STT_EXPERIMENTS.md`](docs/stt/STT_EXPERIMENTS.md)
+- 백엔드 연동 명세: [`docs/api/AI_HANDOFF.md`](docs/api/AI_HANDOFF.md)
+
 `.env` 로드는 진입점 스크립트의 책임입니다. 라이브러리(`llm/`, `stt/`)는 환경변수를
 읽기만 하므로, 새 진입점을 만들면 `load_dotenv()` 를 직접 호출하세요.
 
@@ -55,6 +69,9 @@ python list_models.py   # 사용 가능한 모델 목록
 ```
 tests/test_severity.py           severity-levels.md 종합 예시 표의 실행 가능한 사본
 tests/test_safety_invariants.py  깨지면 실제 피해가 되는 항목만 모은 것
+tests/test_turn_service.py       백엔드 연동 응답 형식 (docs/api/AI_HANDOFF.md 1장)
+tests/test_ai_server.py          AI 내부 API 의 HTTP 계약 (fastapi 가 없으면 건너뜀)
+tests/test_stt_metrics.py        STT 평가 지표 정의
 ```
 
 # 설계 규칙

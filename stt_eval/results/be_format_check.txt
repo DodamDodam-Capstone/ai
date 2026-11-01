@@ -1,0 +1,8 @@
+백엔드 통합 형식 검증: age_400, 나이별 25개 (총 100개)
+STT: Qwen/Qwen3-ASR-1.7B / LLM: 가짜(고정 답변) / TTS: 가짜
+입력: WebM(Opus) multipart, POST /internal/ai/turns
+
+형식 검증 통과: 100/100
+응답 status: {'SUCCEEDED': 100}
+STT Normalized CER 문장 평균: 2.97% (정확 일치 73/100)
+요청 1건 처리 시간: 중간값 1.98초 | 최대 9.21초

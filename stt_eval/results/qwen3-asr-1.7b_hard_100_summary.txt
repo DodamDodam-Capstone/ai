@@ -1,0 +1,32 @@
+Qwen3-ASR STT 평가: hard_100 (Qwen/Qwen3-ASR-1.7B)
+================================================
+
+전체 | 100개
+  Normalized CER  문장 평균 8.03% | Corpus 7.54%
+  정확 일치       46개 (46.0%)
+  처리 시간       중간값 1.71초 | 최소 0.55초 | 최대 3.26초
+  Semantic        평균 0.924 | MATCH 78 / REVIEW 18 / MISMATCH 4
+
+7세 | 25개
+  Normalized CER  문장 평균 6.66% | Corpus 6.49%
+  정확 일치       11개 (44.0%)
+  처리 시간       중간값 1.60초 | 최소 1.00초 | 최대 2.66초
+  Semantic        평균 0.921 | MATCH 18 / REVIEW 7 / MISMATCH 0
+
+8세 | 25개
+  Normalized CER  문장 평균 8.76% | Corpus 7.79%
+  정확 일치       12개 (48.0%)
+  처리 시간       중간값 1.80초 | 최소 0.55초 | 최대 3.26초
+  Semantic        평균 0.918 | MATCH 21 / REVIEW 3 / MISMATCH 1
+
+9세 | 25개
+  Normalized CER  문장 평균 6.44% | Corpus 5.66%
+  정확 일치       14개 (56.0%)
+  처리 시간       중간값 1.74초 | 최소 0.95초 | 최대 3.12초
+  Semantic        평균 0.958 | MATCH 23 / REVIEW 1 / MISMATCH 1
+
+10세 | 25개
+  Normalized CER  문장 평균 10.27% | Corpus 9.82%
+  정확 일치       9개 (36.0%)
+  처리 시간       중간값 1.71초 | 최소 1.07초 | 최대 2.68초
+  Semantic        평균 0.899 | MATCH 16 / REVIEW 7 / MISMATCH 2

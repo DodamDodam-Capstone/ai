@@ -35,6 +35,10 @@ class STTResult:
     engine: str = ""
 
 
+class UnsupportedAudioError(ValueError):
+    """STT 엔진이 읽을 수 없는 오디오(형식 미지원, 손상, 빈 파일)."""
+
+
 class STTEngine(ABC):
     """음성 -> 텍스트. CLOVA / GPT-4o-transcribe / RTZR / Whisper 를 같은 형태로 반환합니다.
 

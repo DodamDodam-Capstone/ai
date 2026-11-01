@@ -159,7 +159,7 @@ class TurnOrchestrator:
 
         Args:
             audio: 아이 발화 오디오 원본 바이트.
-            profile: 아이 프로필. name/age 는 필수, interests/voice 는 선택.
+            profile: 아이 프로필. name 은 필수, age/interests/voice 는 선택.
             history: 최근 대화 이력. [(역할, 텍스트), ...] 형식.
             memory: 장기기억에서 검색해온 문장들. 없으면 None.
             synthesize: False 면 TTS 를 건너뜁니다. 텍스트만 필요한 벤치마크에서 사용.
@@ -240,7 +240,7 @@ class TurnOrchestrator:
         if forced_reply is None:
             dynamic = build_dynamic_context(
                 child_name=profile["name"],
-                age=profile["age"],
+                age=profile.get("age"),
                 interests=profile.get("interests", []),
                 recent_turns=history,
                 retrieved_memory=memory,
