@@ -1,162 +1,150 @@
-# STT 모델 비교 실험 결과 (SCRUM-120)
+# STT: Qwen3-ASR 1.7B 아동 음성 인식 (SCRUM-120)
 
 - Jira: [SCRUM-120 [AI] STT](https://dodamdodam.atlassian.net/browse/SCRUM-120) (상위: SCRUM-51 [AI] 음성 AI 대화)
-- 목적: 7~10세 아동 음성에 가장 적합한 STT 엔진 선정
-- 비교 대상: CLOVA Speech, Whisper turbo, Qwen3-ASR(1.7B / 0.6B / 0.6B-4bit), CLOVA + Llama 후처리
+- 목적: 7~10세 아동 음성을 텍스트로 바꾸는 STT 엔진 선정과 검증
+- **선정 모델: Qwen3-ASR 1.7B** (`Qwen/Qwen3-ASR-1.7B`), STT 결과 후처리 없음
+- 서비스 코드: [`stt/qwen.py`](../../stt/qwen.py) / 평가 코드: [`stt_eval/`](../../stt_eval/) / 연동 명세: [`docs/api/AI_HANDOFF.md`](../api/AI_HANDOFF.md)
 
-## 1. 데이터셋
+## 1. 선정 근거
 
-AI-Hub `011.한국어 아동 음성 데이터`의 **Validation / kor_free** 세트를 사용했다.
+같은 연령별 400개 문장에서 후보를 비교했고, Qwen3-ASR 1.7B 가 가장 정확했다.
 
-| 세트 | 구성 | 생성 방법 | 사용 실험 |
-|---|---|---|---|
-| 초기 1000개 | 1000개 (연령 구분 없음) | - | CLOVA 초기 평가 |
-| 연령별 400개 | 7·8·9·10세 각 100개 (seed 42) | `make_age_samples.py` | CLOVA, Qwen3-ASR |
-| 연령별 100개 | 7·8·9·10세 각 25개 | - | CLOVA, Whisper, Llama 후처리 |
-| Hard test 100개 | 400개 중 CLOVA 오답을 연령별 CER 상위 25개씩 | `make_hard_test_set.py` | Qwen3-ASR |
+| 후보 | 문장 평균 Normalized CER (400개) | 비고 |
+|---|---|---|
+| **Qwen3-ASR 1.7B** | **4.53%** | 전 세트·전 연령 1위 |
+| Qwen3-ASR 0.6B | 7.68% | 더 빠르지만 덜 정확 |
+| CLOVA Speech | 11.58% | 외부 API |
 
-- 연령별 100개 세트는 CLOVA·Whisper·Llama 실험에서 **동일한 100개 샘플**을 사용했다.
-- manifest CSV(`stt_age_*_manifest.csv`, `hard_test_100.csv`)는 로컬 절대경로가 포함되어 저장소에 올리지 않았다. 위 스크립트로 재생성한다.
-- 나이별 데이터 분포는 `check_age_distribution.py`로 확인했다.
+- Whisper turbo 는 별도 100개 세트에서 Normalized Corpus CER 6.48%, 문장당 약 4초로 느렸다.
+- STT 결과에 LLM 후처리를 일괄 적용하면 정답이던 문장까지 고쳐 CER 이 나빠졌다(CLOVA 기준 13.4% → 21.1%). 그래서 후처리는 하지 않는다.
+- 위 비교 실험 코드와 결과는 PR #41 이력에 있고, 이 저장소에는 선정된 Qwen3-ASR 1.7B 의 재현 코드만 남겼다.
 
-## 2. 평가 지표
+## 2. 데이터셋
+
+AI-Hub `011.한국어 아동 음성 데이터`의 **Validation / kor_free** 를 쓴다.
+
+| 평가 세트 | 구성 | 목록 |
+|---|---|---|
+| `age_400` | 7·8·9·10세 각 100개 (seed 42 무작위 추출) | [`stt_eval/eval_sets/age_400.csv`](../../stt_eval/eval_sets/age_400.csv) |
+| `hard_100` | `age_400` 중 기존 상용 STT(CLOVA)가 틀린 문장을 연령별 CER 상위 25개씩 | [`stt_eval/eval_sets/hard_100.csv`](../../stt_eval/eval_sets/hard_100.csv) |
+
+- 목록에는 파일 이름과 나이만 있다. AI-Hub 약관상 음성과 정답 전사문은 저장소에 올리지 않고, 각자 내려받은 원본에서 읽는다.
+- 결과 CSV 에도 정답 전사문은 싣지 않는다.
+
+## 3. 평가 지표
 
 | 지표 | 설명 |
 |---|---|
-| Raw CER | 원문 그대로 비교한 글자 오류율 |
-| Normalized CER | 띄어쓰기·문장부호·숫자 표기를 정규화한 뒤 비교한 글자 오류율 |
-| 문장 평균 CER / Corpus CER | 문장별 CER의 평균 / 전체 글자 기준 CER |
-| 정확 일치 | 정규화 후 정답과 완전히 같은 문장 수 |
-| Semantic 유사도 | `jhgan/ko-sroberta-multitask` 임베딩 유사도. 0.85 이상 MATCH, 0.70 이상 REVIEW, 미만 MISMATCH |
-| 처리 시간 | 문장 1개당 평균 인식 시간 |
+| Normalized CER | 띄어쓰기·문장부호를 지우고 한글 소수("삼 점 오")·단위 표기를 통일한 뒤의 글자 오류율 |
+| 문장 평균 / Corpus | 문장별 CER 의 평균 / 전체 편집 거리 ÷ 전체 정답 글자 수 |
+| 정확 일치 | 정규화 후 정답과 완전히 같은 문장 |
+| Semantic | `jhgan/ko-sroberta-multitask` 임베딩 유사도. 0.85 이상이고 부정어·숫자 차이가 없으면 MATCH, 0.70 미만 MISMATCH, 그 사이 REVIEW |
+| 처리 시간 | 문장 1개 인식 시간 (디코딩 포함) |
 
-CLOVA·Qwen3-ASR 평가는 `smoke_stt_batch.py`의 동일한 정규화·CER·Semantic 함수를 사용해 같은 기준으로 비교했다.
+정의는 [`stt_eval/metrics.py`](../../stt_eval/metrics.py). 선정 실험 때 쓴 함수와 500개 문장 전부에서 같은 값이 나오는 것을 확인했다.
 
-## 3. 실험별 결과
+## 4. 결과 (Qwen3-ASR 1.7B)
 
-### 3.1 CLOVA 초기 평가 (1000개)
+`stt_eval/evaluate.py` 로 다시 돌린 결과다. 선정 실험 때의 수치와 문장 단위까지 같게 재현됐다.
+Apple Silicon(MPS), bfloat16 기준이다.
 
-| 평균 CER | 완전 일치 | CER ≤ 5% | CER > 20% | 평균 처리 시간 |
-|---|---|---|---|---|
-| 10.40% | 407 / 1000 | 468 | 181 | 1.05초 |
+**age_400 (7~10세 각 100개)**
 
-- 결과: [`logs/stt_child_validation_summary.txt`](../../logs/stt_child_validation_summary.txt)
-
-### 3.2 CLOVA 연령별 평가
-
-**400개**
-
-| 나이 | Normalized CER | 문장 평균 CER | Semantic | MATCH 비율 |
-|---|---|---|---|---|
-| 7세 | 11.55% | 11.97% | 0.886 | 70% |
-| 8세 | 14.33% | 12.69% | 0.865 | 63% |
-| 9세 | 10.93% | 9.40% | 0.911 | 75% |
-| 10세 | 12.25% | 12.26% | 0.881 | 70% |
-| **전체** | **12.31%** (Corpus) | **11.58%** | **0.886** | 정확 일치 166 / 400 |
-
-**100개**: Corpus Normalized CER 13.45%, 정확 일치 35 / 100
-
-- 결과: [`logs/stt_age_400_summary.txt`](../../logs/stt_age_400_summary.txt), [`logs/stt_age_100_summary.txt`](../../logs/stt_age_100_summary.txt)
-
-### 3.3 Whisper turbo (연령별 100개)
-
-| 지표 | Whisper | CLOVA (동일 100개) |
-|---|---|---|
-| Normalized Corpus CER | **6.48%** | 13.45% |
-| 정확 일치 | **53 / 100** | 35 / 100 |
-| Semantic 평균 | 0.904 | - |
-| 평균 처리 시간 | 4.07초 | - |
-
-- CLOVA보다 정확도는 높지만 처리 시간이 길다 (로컬 실행 기준).
-- 결과: [`logs/whisper_age_100_summary.txt`](../../logs/whisper_age_100_summary.txt)
-
-### 3.4 Qwen3-ASR (연령별 400개 / Hard test 100개)
-
-**연령별 400개 (CLOVA와 동일 샘플)**
-
-| 모델 | 문장 평균 CER | 정확 일치 | Semantic | CLOVA 대비 개선 / 악화 | 평균 처리 시간 |
+| 나이 | 문장 평균 CER | Corpus CER | 정확 일치 | Semantic MATCH / REVIEW / MISMATCH | 처리 시간 중간값 |
 |---|---|---|---|---|---|
-| CLOVA | 11.58% | 166 | 0.886 | - | - |
-| Qwen3-ASR 1.7B | **4.53%** | **265** | **0.959** | 196 / 40 | 1.80초 |
-| Qwen3-ASR 0.6B | 7.68% | 202 | 0.920 | 171 / 87 | 0.98초 |
-| Qwen3-ASR 0.6B-4bit (MLX) | 10.81% | 150 | 0.886 | 144 / 133 | **0.42초** |
+| **전체** | **4.53%** | **4.44%** | **265 / 400** | **358 / 31 / 11** | **1.72초** |
+| 7세 | 5.42% | 4.64% | 60 | 87 / 11 / 2 | 1.79초 |
+| 8세 | 4.45% | 4.97% | 68 | 90 / 5 / 5 | 1.60초 |
+| 9세 | 4.12% | 3.84% | 71 | 93 / 5 / 2 | 1.39초 |
+| 10세 | 4.13% | 4.27% | 66 | 88 / 10 / 2 | 1.84초 |
 
-**Hard test 100개 (CLOVA가 틀린 문장)**
+**hard_100 (어려운 문장)**
 
-| 모델 | 문장 평균 Normalized CER | 정확 일치 | Semantic |
-|---|---|---|---|
-| CLOVA | 32.67% | 0 | - |
-| Qwen3-ASR 1.7B | **8.03%** | **46** | **0.924** |
-| Qwen3-ASR 0.6B | 12.69% | 30 | 0.869 |
-| Qwen3-ASR 0.6B-4bit | 17.47% | 19 | 0.831 |
+| 나이 | 문장 평균 CER | Corpus CER | 정확 일치 | Semantic MATCH / REVIEW / MISMATCH |
+|---|---|---|---|---|
+| **전체** | **8.03%** | **7.54%** | **46 / 100** | **78 / 18 / 4** |
+| 7세 | 6.66% | 6.49% | 11 | 18 / 7 / 0 |
+| 8세 | 8.76% | 7.79% | 12 | 21 / 3 / 1 |
+| 9세 | 6.44% | 5.66% | 14 | 23 / 1 / 1 |
+| 10세 | 10.27% | 9.82% | 9 | 16 / 7 / 2 |
 
-**Qwen3-ASR 1.7B 연령별 결과 (문장 평균 Normalized CER)**
+- 처리 시간은 최소 0.56초, 최대 4.48초다.
+- 같은 hard_100 에서 기존 상용 STT(CLOVA)는 문장 평균 CER 32.67%, 정확 일치 0개였다.
+- 의미가 틀린 문장(MISMATCH)은 주로 고유명사·드문 단어 오인식이다(예: 고로케 → 코르케). 일부는 출력이 잘리거나 깨졌다(예: 할머니! 어서 오세요 → 해머니어 C U C U).
+- 문장별 결과: [`stt_eval/results/`](../../stt_eval/results/)
 
-| 나이 | 400개 세트 (CLOVA) | MATCH / REVIEW / MISMATCH | Hard test (CLOVA) |
-|---|---|---|---|
-| 7세 | 5.42% (11.97%) | 87 / 11 / 2 | 6.66% (30.82%) |
-| 8세 | 4.45% (12.69%) | 90 / 5 / 5 | 8.76% (35.93%) |
-| 9세 | 4.12% (9.40%) | 93 / 5 / 2 | 6.44% (29.75%) |
-| 10세 | 4.13% (12.26%) | 88 / 10 / 2 | 10.27% (34.15%) |
+## 5. 백엔드 연동 형식 검증
 
-- 모든 연령에서 CLOVA 대비 CER이 절반 이하이며, 특정 연령에서 크게 떨어지지 않는다.
-- MISMATCH 11개는 주로 고유명사·드문 단어 오인식(예: 고로케 → 코르케)이며, 일부는 출력이 잘리거나 깨졌다(예: 할머니! 어서 오세요 → 해머니어 C U C U).
+백엔드가 보내는 것과 같은 WebM(Opus) 음성을 [AI_HANDOFF](../api/AI_HANDOFF.md) 1장 형식(`POST /internal/ai/turns`, multipart `metadata` JSON + `audio`)으로 보내 확인했다.
 
-- 1.7B·0.6B는 Apple MPS, 0.6B-4bit는 MLX로 로컬 실행했다.
-- 결과: `logs/qwen3_asr_*_summary.txt` (1.7B는 `qwen3_asr_*`, 0.6B는 `qwen3_asr_0.6b_*`, 4bit는 `qwen3_asr_0.6b_4bit_*`)
+`stt_eval/be_format_check.py --limit-per-age 25` (age_400 의 나이별 앞 25개, 총 100개):
 
-### 3.5 CLOVA + Llama 3.1 8B 후처리 (연령별 100개)
+| 항목 | 결과 |
+|---|---|
+| 명세 형식 검증 통과 | **100 / 100** |
+| 응답 status | SUCCEEDED 100 |
+| STT 문장 평균 CER (WebM 입력) | **2.97%** (정확 일치 73) |
+| 같은 100개를 WAV 로 넣었을 때 | 3.15% (정확 일치 74) |
+| B안 오디오 다운로드 (`GET /internal/ai/audio/{ref}`) | 100 / 100 성공 |
+| 요청 1건 처리 시간 | 중간값 1.98초, 최대 9.21초 (첫 요청의 준비 시간 포함) |
 
-| 지표 | CLOVA | CLOVA + Llama |
-|---|---|---|
-| Corpus CER | **13.44%** | 21.06% |
-| 정확 일치 | **35** | 15 |
-| 문장별 변화 | - | 개선 4 / 동일 39 / 악화 57 |
+- WebM(Opus) 압축을 거쳐도 STT 정확도는 떨어지지 않았다.
+- 검사 항목: 응답 필드 구성, 식별자 3개 반환, `visibility` 와 `text`·허용값 일치, `tts` 필드(`expiresAt` 시간대 포함), 실패 시 `error`·`expressionCode` 규칙.
+- 이 검증에서 LLM 은 고정 답변, TTS 는 가짜 엔진을 썼다. 대상은 STT 와 응답 형식이다.
 
-- Llama가 이미 정답인 CLOVA 문장 21개를 불필요하게 수정했다 (불필요 수정률 60%).
-- 모든 STT 결과에 LLM 후처리를 일괄 적용하는 방식은 정확도를 떨어뜨린다.
-- 결과: [`logs/stt_age_100_llama_summary.txt`](../../logs/stt_age_100_llama_summary.txt)
+## 6. 재현 방법
 
-## 4. 종합 비교 및 결론
-
-| 모델 | 정확도 (CLOVA 대비) | 속도 | 비고 |
-|---|---|---|---|
-| CLOVA | 기준 | 빠름 (약 1초) | 외부 API, 비용 발생 |
-| Whisper turbo | 높음 | 느림 (4.07초) | 로컬 실행 |
-| Qwen3-ASR 1.7B | **가장 높음** | 보통 (1.80초) | 로컬 실행, hard test에서도 가장 강함 |
-| Qwen3-ASR 0.6B | 높음 | 빠름 (0.98초) | 정확도·속도 균형 |
-| Qwen3-ASR 0.6B-4bit | CLOVA와 비슷 | 가장 빠름 (0.42초) | 경량화로 정확도 손실 큼 |
-| CLOVA + Llama | 낮아짐 | - | 일괄 후처리는 비권장 |
-
-- 아동 음성 인식 정확도는 **Qwen3-ASR 1.7B**가 모든 세트에서 가장 높았다.
-- 응답 속도가 중요하면 **Qwen3-ASR 0.6B**가 대안이다.
-- 4bit 양자화와 LLM 일괄 후처리는 정확도 손실이 커서 제외한다.
-- **최종 선정 모델: Qwen3-ASR 1.7B (STT 결과 후처리 없음)**
-  - 선정 근거: 전체·hard test·연령별 모든 세트에서 정확도 1위, 7~10세 전 연령에서 CLOVA 대비 CER 절반 이하.
-  - 후처리: LLM 일괄 교정은 정확도를 떨어뜨리므로 적용하지 않는다. 오인식은 대화 LLM이 문맥으로 해석하거나, 비정상 결과(빈 출력·지나치게 짧은 출력·외국 문자 등)일 때 아이에게 다시 묻는 방식으로 대응한다.
-  - 남은 검증: 실제 녹음 환경(생활 소음·즉흥 발화)에서의 정확도, 배포 서버에서의 응답 속도. 평가 데이터(AI-Hub)는 공개 데이터라 모델 학습에 포함됐을 가능성이 있다.
-
-## 5. 재현 방법
+### 6.1 준비
 
 ```bash
-# 1) 평가 세트 생성
-python make_age_samples.py            # stt_age_400_manifest.csv
-python smoke_stt_batch.py             # CLOVA 400개 평가 (.env에 CLOVA 키 필요)
-python make_hard_test_set.py          # hard_test_100.csv
-
-# 2) 모델별 평가
-python evaluate_whisper_100.py
-.venv/bin/python evaluate_qwen_400.py                     # Qwen3-ASR 1.7B
-QWEN_ASR_MODEL=Qwen/Qwen3-ASR-0.6B .venv/bin/python evaluate_qwen_400.py
-QWEN_ASR_MODEL=mlx-community/Qwen3-ASR-0.6B-4bit .venv-mlx/bin/python evaluate_qwen_400.py
-# hard test는 evaluate_qwen_hard_set.py를 같은 방식으로 실행
-python evaluate_llama_postprocess_100.py                  # 로컬 Ollama llama3.1:8b 필요
-
-# 3) 요약 생성
-python logs/summarize_stt_results.py
-python logs/summarize_llama_postprocess.py
+# Python 3.12
+python -m venv .venv
+.venv/bin/pip install -r requirements.txt -r requirements-stt.txt
 ```
 
-추가 의존성(`requirements.txt`에 미포함): `sentence-transformers`, `openai-whisper`, `torch`, `qwen-asr`, `mlx-audio`(4bit, 별도 `.venv-mlx`), `ollama`
+- AI-Hub `011.한국어 아동 음성 데이터` Validation 원천·라벨링 데이터를 내려받아 압축을 푼다.
+- 기본 위치는 저장소 상위 폴더(`~/Desktop/DodamDodam`)다. 다른 곳이면 `AIHUB_CHILD_SPEECH_ROOT` 로 지정한다.
 
-> ⚠️ `smoke_stt_batch.py`는 SCRUM-15에서 수정한 `stt/clova.py` 호출 방식을 기준으로 작성되었다.
+```
+$AIHUB_CHILD_SPEECH_ROOT/
+├── 011.한국어_아동_음성_데이터_원천/01.데이터/2.Validation/원천데이터/kor_free/...
+└── 011.한국어_아동_음성_데이터_라벨링/01.데이터/2.Validation/라벨링데이터/kor_free/...
+```
+
+- 모델(`Qwen/Qwen3-ASR-1.7B`, 약 4.4GB)과 Semantic 모델은 첫 실행 때 Hugging Face 에서 자동으로 받는다.
+
+### 6.2 STT 정확도 평가
+
+```bash
+.venv/bin/python -m stt_eval.evaluate --set age_400
+.venv/bin/python -m stt_eval.evaluate --set hard_100
+# 빠른 확인: 나이별 5개씩
+.venv/bin/python -m stt_eval.evaluate --set age_400 --limit-per-age 5
+```
+
+결과는 `stt_eval/results/qwen3-asr-1.7b_<세트>.csv`(문장별)와 `_summary.txt`(요약)에 남는다.
+중간에 멈춰도 다시 실행하면 이어서 돈다. 처음부터 다시 하려면 CSV 를 지운다.
+
+### 6.3 백엔드 연동 형식 검증
+
+```bash
+.venv/bin/python -m stt_eval.be_format_check                  # 나이별 5개씩
+.venv/bin/python -m stt_eval.be_format_check --limit-per-age 25
+```
+
+`GEMINI_API_KEY` 가 있으면 LLM 답변도 Gemini 로 만든다. 없으면 고정 답변을 쓴다. 결과는 `stt_eval/results/be_format_check.txt`.
+
+### 6.4 서버 실행
+
+```bash
+.venv/bin/uvicorn api.server:app --port 8000
+```
+
+`GEMINI_API_KEY` 가 필요하다. 서버 간 인증은 `AI_SERVER_TOKEN` 으로 켠다.
+
+## 7. 알려진 한계
+
+- 평가 데이터는 조용한 곳에서 또박또박 읽은 문장이다. 생활 소음·즉흥 발화가 섞인 실제 녹음에서는 정확도가 떨어질 수 있다.
+- AI-Hub 는 공개 데이터라 모델 학습에 포함됐을 가능성이 있다.
+- 무음 입력에도 "그렇죠." 같은 문장을 만들어 낸다. 무음·잘못 누름은 STT 전에 걸러야 한다.
+- 처리 시간은 Apple Silicon(MPS) 기준이다. 배포 서버(GPU)에서 다시 재야 한다.
