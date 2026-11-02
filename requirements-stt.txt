@@ -1,0 +1,23 @@
+# Qwen3-ASR STT, 평가(stt_eval/), AI 내부 API 서버(api/) 용 추가 의존성.
+# 기본 의존성(requirements.txt) 위에 설치한다.
+#   pip install -r requirements.txt -r requirements-stt.txt
+# 버전은 SCRUM-120 평가를 돌린 환경(Python 3.12, macOS Apple Silicon) 기준.
+
+# STT 모델
+qwen-asr==0.0.6
+torch==2.14.1
+
+# 오디오 디코딩·인코딩 (WebM/Opus, m4a, wav)
+av==19.0.1
+numpy==2.5.3
+soundfile==0.14.0
+librosa==1.0.0
+
+# 평가 Semantic 유사도 (jhgan/ko-sroberta-multitask)
+sentence-transformers==5.7.0
+
+# AI 내부 API 서버
+fastapi==0.142.2
+uvicorn==0.54.0
+python-multipart==0.0.32
+pydantic==2.13.5
