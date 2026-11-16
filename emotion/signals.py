@@ -13,9 +13,11 @@ from datetime import datetime, timezone
 from core.interfaces import EmotionLabel, EmotionResult, EmotionSignal
 
 # 이 값 미만의 신뢰도는 라벨을 내지 않고 중립으로 내린다.
-# 규칙 기반 구현체는 점수가 없어(None) 실제 발동은 학습된 분류기부터다.
-# 숫자에 근거는 아직 없다 — capstone_documents/emotion-labels.md 의 "임계값 미확정" 참고.
-CONFIDENCE_THRESHOLD = 0.5
+# 규칙 기반 구현체는 점수가 없어(None) 학습된 분류기에만 적용된다.
+# 0.95 는 model1 v0.3 의 review_threshold(models/model/emotion_metadata.json)다.
+# 테스트셋의 98.7% 가 이 값을 넘고, 넘은 것의 정확도는 99.3% 였다. 점수는 보정된
+# 확률이 아니므로 모델을 바꾸면 이 값도 다시 정해야 한다.
+CONFIDENCE_THRESHOLD = 0.95
 
 
 def to_signal(

@@ -298,19 +298,23 @@ class EmotionLabel(str, Enum):
     RiskLevel 과 달리 int 가 아니라 str 을 상속합니다. 감정 라벨에는 서열이 없으므로
     부등호로 임계값을 다룰 수 있으면 안 됩니다.
 
+    라벨링 매뉴얼 v0.3 의 학습용 범주(C0~C5)와 1:1 대응합니다.
+
     Attributes:
-        NEUTRAL: 중립. 감정 표현이 없거나 발화 시점에 남아있지 않음. 기본값.
-        JOY: 기쁨. 즐거움/신남/뿌듯함.
-        SADNESS: 슬픔. 속상함/서운함/실망. 외로움/무기력도 여기로 매깁니다.
-        ANGER: 화남. 분노/짜증/억울함.
-        FEAR: 두려움. 무서움/걱정/긴장.
+        NEUTRAL: 감정 없음(C0). 사실/요청/질문/선호, 타인의 감정, 신체 감각. 기본값.
+        POSITIVE: 긍정(C1). 기쁨·즐거움, 편안함·안도, 뿌듯함·성취감.
+        FEAR: 걱정·두려움(C2). 무서움/걱정/불안/난처함/자신 없음.
+        UPSET: 속상함(C3). 슬픔·서운함, 화·답답함, 외로움·소외감을 한 범주로 봅니다.
+        SHAME: 부끄러움·미안함(C4). 창피함, 본인이 하는 사과, 자책.
+        NEGATIVE_OTHER: 부정 기타(C5). C2~C4 로 특정할 수 없는 부정적 기분.
     """
 
     NEUTRAL = "neutral"
-    JOY = "joy"
-    SADNESS = "sadness"
-    ANGER = "anger"
+    POSITIVE = "positive"
     FEAR = "fear"
+    UPSET = "upset"
+    SHAME = "shame"
+    NEGATIVE_OTHER = "negative_other"
 
 
 @dataclass

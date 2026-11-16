@@ -48,7 +48,7 @@ class SlowEmotionClassifier(EmotionClassifier):
     ) -> EmotionResult:
         await asyncio.sleep(0.2)
         return EmotionResult(
-            label=EmotionLabel.JOY, confidence=0.9, classifier=self.name
+            label=EmotionLabel.POSITIVE, confidence=0.99, classifier=self.name
         )
 
 
@@ -185,14 +185,14 @@ def test_emotion_log_survives_the_most_severe_turn(tmp_path):
 @pytest.mark.parametrize(
     "confidence,expected",
     [
-        (None, EmotionLabel.JOY),  # 점수가 없는 규칙 기반은 깎지 않는다
-        (CONFIDENCE_THRESHOLD, EmotionLabel.JOY),
+        (None, EmotionLabel.POSITIVE),  # 점수가 없는 규칙 기반은 깎지 않는다
+        (CONFIDENCE_THRESHOLD, EmotionLabel.POSITIVE),
         (CONFIDENCE_THRESHOLD - 0.01, EmotionLabel.NEUTRAL),
     ],
 )
 def test_low_confidence_falls_back_to_neutral(confidence, expected):
     """임계값 미만이면 중립으로 내린다. 애매하면 과다 해석하지 않는 쪽이다."""
-    result = EmotionResult(label=EmotionLabel.JOY, confidence=confidence)
+    result = EmotionResult(label=EmotionLabel.POSITIVE, confidence=confidence)
     signal = to_signal(result, turn_id="t1", child_id="anon_x")
 
     assert signal.label is expected

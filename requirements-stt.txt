@@ -7,6 +7,10 @@
 qwen-asr==0.0.6
 torch==2.14.1
 
+# 감정 분류기 (emotion/model.py). 버전은 모델을 학습한 환경 기준. torch 는 위의 것을 쓴다.
+transformers==5.22.1
+safetensors>=0.4.3
+
 # 오디오 디코딩·인코딩 (WebM/Opus, m4a, wav)
 av==19.0.1
 numpy==2.5.3

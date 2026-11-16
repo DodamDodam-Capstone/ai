@@ -20,7 +20,9 @@ GET /health
 "Authorization: Bearer <토큰>" 을 요구한다. 방식은 백엔드와 확정 전 임시안.
 
 엔진은 서버 시작 시 한 번 만든다. Qwen3-ASR 로딩에 수십 초가 걸린다.
-필요한 환경변수: GEMINI_API_KEY (선택: GEMINI_MODEL, QWEN_ASR_MODEL, AI_SERVER_TOKEN).
+감정 분류기는 models/model/ 의 학습 모델을 쓴다. 가중치가 없으면 규칙 기반으로 내려간다.
+필요한 환경변수: GEMINI_API_KEY (선택: GEMINI_MODEL, QWEN_ASR_MODEL, AI_SERVER_TOKEN,
+EMOTION_MODEL_DIR).
 TTS 엔진은 아직 없어서 응답은 FAILED(TTS_UNAVAILABLE)로 나간다. stt·reply 는 실린다.
 """
 
@@ -45,7 +47,6 @@ _service: TurnService | None = None
 
 def build_service() -> TurnService:
     # 무거운 import 는 서버를 띄울 때만 한다.
-    from emotion.checkers import RuleEmotionClassifier
     from llm.gemini import GeminiEngine
     from safety.checkers import ReadabilityChecker, RuleChecker
     from stt.qwen import QwenSTT
@@ -56,8 +57,24 @@ def build_service() -> TurnService:
         tts=None,
         input_checkers=[RuleChecker()],
         output_checkers=[RuleChecker(), ReadabilityChecker()],
-        emotion_classifier=RuleEmotionClassifier(),
+        emotion_classifier=build_emotion_classifier(),
     )
+
+
+def build_emotion_classifier():
+    """학습된 감정 분류기를 올린다. 못 올리면 규칙 기반으로 내려간다.
+
+    감정 분류는 대화를 막지 않는다는 불변식이 서버 기동에도 적용된다. 가중치를 안 받은
+    개발 환경에서도 서버는 떠야 한다.
+    """
+    from emotion.checkers import RuleEmotionClassifier
+    from emotion.model import BertEmotionClassifier
+
+    try:
+        return BertEmotionClassifier.load()
+    except (FileNotFoundError, ImportError, ValueError) as exc:
+        _log.warning("학습된 감정 분류기를 못 올려 규칙 기반으로 동작한다: %s", exc)
+        return RuleEmotionClassifier()
 
 
 @asynccontextmanager

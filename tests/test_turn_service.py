@@ -9,6 +9,8 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 from api.audio_store import InMemoryAudioStore, Lookup
 from api.turn_service import TurnService
 from core.fakes import FakeEmotionClassifier, FakeLLM, FakeSTT, FakeTTS
@@ -92,7 +94,7 @@ def run(
     stt=None,
     llm=None,
     tts="fake",
-    emotion=EmotionLabel.JOY,
+    emotion=EmotionLabel.POSITIVE,
     meta=None,
     audio=b"<audio>",
 ):
@@ -133,8 +135,17 @@ def test_success_shape():
     assert audio == "정말 재미있었겠다!".encode("utf-8")
 
 
-def test_sad_child_gets_caring_expression():
-    body, _ = run(emotion=EmotionLabel.SADNESS)
+@pytest.mark.parametrize(
+    "emotion",
+    [
+        EmotionLabel.FEAR,
+        EmotionLabel.UPSET,
+        EmotionLabel.SHAME,
+        EmotionLabel.NEGATIVE_OTHER,
+    ],
+)
+def test_negative_emotion_gets_caring_expression(emotion):
+    body, _ = run(emotion=emotion)
 
     assert body["expressionCode"] == "CARING"
 

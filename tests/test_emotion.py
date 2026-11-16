@@ -1,9 +1,9 @@
-"""감정 라벨링 회귀 테스트.
+"""규칙 기반 감정 분류기(RuleEmotionClassifier) 회귀 테스트.
 
-capstone_documents/emotion-labels.md 의 종합 예시 표를 그대로 옮긴 것이다. 문서가 사양이고
-이 파일이 그 사양의 실행 가능한 사본이다. 둘 중 하나만 고치면 안 된다.
-
-학습된 분류기로 교체할 때 이 표가 기준선이 된다.
+4+1 라벨 체계 시절 emotion-labels.md 의 종합 예시 표를 옮긴 것이다. 라벨만 6범주로
+바꿨고(기쁨→긍정, 슬픔·화남→속상함) 판정 규칙은 그대로라, 이 표는 더 이상 사양이
+아니라 폴백 구현체의 현재 동작을 고정하는 표다. 사양은 라벨링 매뉴얼 v0.3 이고,
+그 예시는 tests/test_emotion_model.py 가 학습된 분류기로 확인한다.
 """
 
 from __future__ import annotations
@@ -16,9 +16,9 @@ from core.interfaces import EmotionLabel
 from emotion.checkers import RuleEmotionClassifier
 
 N = EmotionLabel.NEUTRAL
-J = EmotionLabel.JOY
-S = EmotionLabel.SADNESS
-A = EmotionLabel.ANGER
+J = EmotionLabel.POSITIVE
+S = EmotionLabel.UPSET
+A = EmotionLabel.UPSET
 F = EmotionLabel.FEAR
 
 
@@ -69,7 +69,7 @@ SPEC_CASES = [
 
 @pytest.mark.parametrize("text,expected", SPEC_CASES, ids=[c[0] for c in SPEC_CASES])
 def test_emotion_table(text, expected):
-    """emotion-labels.md 종합 예시 표의 각 행이 그대로 재현되는지 확인."""
+    """4+1 체계 시절 종합 예시 표의 각 행이 그대로 재현되는지 확인."""
     assert label(text) is expected
 
 
