@@ -64,10 +64,11 @@ DEADLINE_MARGIN_SEC = 1.0
 # FE 캐릭터 구현 범위와 확정 전 임시안. SURPRISED, SAD 는 아직 쓰지 않는다.
 EXPRESSION_BY_EMOTION = {
     EmotionLabel.NEUTRAL: "NEUTRAL",
-    EmotionLabel.JOY: "HAPPY",
-    EmotionLabel.SADNESS: "CARING",
-    EmotionLabel.ANGER: "CARING",
+    EmotionLabel.POSITIVE: "HAPPY",
     EmotionLabel.FEAR: "CARING",
+    EmotionLabel.UPSET: "CARING",
+    EmotionLabel.SHAME: "CARING",
+    EmotionLabel.NEGATIVE_OTHER: "CARING",
 }
 # 취약 신호(L2) 이상이면 감정과 무관하게 위로하는 표정을 짓는다.
 CARING_RISK_LEVEL = RiskLevel.L2

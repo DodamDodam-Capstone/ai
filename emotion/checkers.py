@@ -4,9 +4,12 @@
 라벨 정의·경계·종합 예시는 capstone_documents/emotion-labels.md 가 사양이다.
 안전 계층과 완전히 분리된 시스템이며, 어떤 경우에도 대화를 게이팅하지 않는다.
 
-규칙 기반으로 먼저 굴리는 이유는 안전 계층과 같다. 라벨링 전에도 신호를 뽑을 수 있고,
-이 규칙이 매긴 라벨이 사람이 검토·수정할 가라벨이 되어 그대로 학습 데이터가 된다.
-학습된 분류기로 교체한 뒤에도 이 규칙은 앙상블로 남겨둘 것.
+이 파일은 규칙 기반 부트스트랩이다. 서비스 기본 구현체는 학습된 분류기
+(emotion/model.py)이고, 이 규칙은 모델 가중치가 없는 환경의 폴백으로 남겨둔다.
+
+라벨은 6범주로 옮겼지만 판정 규칙은 4+1 체계 시절 그대로다. 슬픔과 화남은 둘 다
+속상함(UPSET)으로 내고, 부끄러움·미안함(SHAME)과 부정 기타(NEGATIVE_OTHER)는 내지
+못한다. "지난 감정의 보고는 중립" 규칙도 매뉴얼 v0.3(과거 감정도 라벨링)과 다르다.
 """
 
 from __future__ import annotations
@@ -35,20 +38,20 @@ _CLAUSE_SPLIT = re.compile(r"[,.!?~\n]|는데|지만")
 # "공룡 좋아"(선호 서술), "울었어"(사건 서술) 가 걸리면 오탐이다.
 MARKERS: tuple[tuple[EmotionLabel, re.Pattern[str]], ...] = (
     (
-        EmotionLabel.JOY,
+        EmotionLabel.POSITIVE,
         re.compile(
             r"(재밌|재미있|신나|신났|기뻐|기쁘|기대|행복|뿌듯|최고|우와|드디어|잘\s*봐|잘\s*봤|즐거)"
         ),
     ),
     (
-        EmotionLabel.SADNESS,
+        EmotionLabel.UPSET,
         re.compile(
             # '서운'은 '무서운'에 통째로 들어있다. 어미를 붙여 끊는다.
             r"(슬퍼|슬프|슬펐|속상|서운[하해했]|실망|우울|외로|울고\s*싶|죽고\s*싶|아무것도\s*하기\s*싫)"
         ),
     ),
     # '분해'는 "로봇 분해했어" 쪽이 아이 발화에서 더 흔하므로 넣지 않는다.
-    (EmotionLabel.ANGER, re.compile(r"(짜증|화나|화났|미워|밉|억울|열받)")),
+    (EmotionLabel.UPSET, re.compile(r"(짜증|화나|화났|미워|밉|억울|열받)")),
     (
         EmotionLabel.FEAR,
         re.compile(r"(무서|무섭|겁나|걱정|긴장|떨려|떨린|불안)"),
@@ -162,7 +165,7 @@ class RuleEmotionClassifier(EmotionClassifier):
         """감정 표지를 모아 지배 감정 하나를 고른다.
 
         여러 감정이 함께 실리면 마지막에 나온 표지를 택한다. 한국어는 주절이 뒤에
-        오므로 "시험 떨리는데 좀 기대돼" 의 지배 감정은 기쁨이다.
+        오므로 "시험 떨리는데 좀 기대돼" 의 지배 감정은 긍정이다.
 
         Args:
             text: 아이 발화.

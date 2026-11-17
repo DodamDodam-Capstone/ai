@@ -55,7 +55,8 @@ class FakeEmotionClassifier(EmotionClassifier):
     def __init__(
         self,
         label: EmotionLabel = EmotionLabel.NEUTRAL,
-        confidence: float | None = 0.9,
+        # 기본값은 emotion/signals.py 의 임계값(0.95)을 넘겨 라벨이 그대로 나가게 둔다.
+        confidence: float | None = 0.99,
     ):
         self.label = label
         self.confidence = confidence
