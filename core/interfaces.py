@@ -35,6 +35,10 @@ class STTResult:
     engine: str = ""
 
 
+class UnsupportedAudioError(ValueError):
+    """STT 엔진이 읽을 수 없는 오디오(형식 미지원, 손상, 빈 파일)."""
+
+
 class STTEngine(ABC):
     """음성 -> 텍스트. CLOVA / GPT-4o-transcribe / RTZR / Whisper 를 같은 형태로 반환합니다.
 
@@ -282,4 +286,104 @@ class SafetyChecker(ABC):
 
         Returns:
             판정 결과를 담은 SafetyResult.
+        """
+
+
+# ---------------------------------------------------------------- Emotion
+
+
+class EmotionLabel(str, Enum):
+    """발화 하나의 지배 감정. 정의와 경계 예시는 capstone_documents/emotion-labels.md 를 따릅니다.
+
+    RiskLevel 과 달리 int 가 아니라 str 을 상속합니다. 감정 라벨에는 서열이 없으므로
+    부등호로 임계값을 다룰 수 있으면 안 됩니다.
+
+    라벨링 매뉴얼 v0.3 의 학습용 범주(C0~C5)와 1:1 대응합니다.
+
+    Attributes:
+        NEUTRAL: 감정 없음(C0). 사실/요청/질문/선호, 타인의 감정, 신체 감각. 기본값.
+        POSITIVE: 긍정(C1). 기쁨·즐거움, 편안함·안도, 뿌듯함·성취감.
+        FEAR: 걱정·두려움(C2). 무서움/걱정/불안/난처함/자신 없음.
+        UPSET: 속상함(C3). 슬픔·서운함, 화·답답함, 외로움·소외감을 한 범주로 봅니다.
+        SHAME: 부끄러움·미안함(C4). 창피함, 본인이 하는 사과, 자책.
+        NEGATIVE_OTHER: 부정 기타(C5). C2~C4 로 특정할 수 없는 부정적 기분.
+    """
+
+    NEUTRAL = "neutral"
+    POSITIVE = "positive"
+    FEAR = "fear"
+    UPSET = "upset"
+    SHAME = "shame"
+    NEGATIVE_OTHER = "negative_other"
+
+
+@dataclass
+class EmotionResult:
+    """분류 1회의 결과. 신뢰도 필터링을 적용하기 전의 원본 판정입니다.
+
+    Attributes:
+        label: 지배 감정. 발화당 하나만 매깁니다.
+        confidence: 0~1 신뢰도. 점수가 없는 규칙 기반 구현체는 None.
+        classifier: 어떤 구현체가 매겼는지. 규칙 기반과 학습 분류기를 비교할 원자료가 됩니다.
+        matched_text: 오탐 디버깅용. 라벨 근거가 된 부분.
+        latency_ms: 분류에 걸린 시간(ms).
+    """
+
+    label: EmotionLabel = EmotionLabel.NEUTRAL
+    confidence: float | None = None
+    classifier: str = ""
+    matched_text: str | None = None
+    latency_ms: float = 0.0
+
+
+@dataclass
+class EmotionSignal:
+    """한 턴의 감정 신호. 통계를 집계하는 쪽(백엔드)에 넘기는 계약 객체.
+
+    누적 집계와 추이 해석은 여기서 하지 않습니다. 단일 발화 신호를 트렌드처럼
+    보이게 포장하지 않는 것까지가 우리 파트의 책임입니다.
+
+    Attributes:
+        label: 신뢰도 필터링까지 반영한 최종 라벨. 임계값 미만이면 NEUTRAL 로 내립니다.
+        confidence: 필터링 전 원본 신뢰도. 제공하지 않는 구현체는 None.
+        turn_id: 어느 턴의 발화인지. 지금은 TurnLogger 가 기록 시점에 발급하므로 분류
+            시점에는 알 수 없어 None 입니다. 발급 주체를 앞으로 옮기는 일은 오케스트레이터
+            통합과 함께 처리합니다.
+        child_id: 익명화된 아이 식별자.
+        ts: 분류 시각. ISO 8601 UTC 문자열.
+    """
+
+    label: EmotionLabel = EmotionLabel.NEUTRAL
+    confidence: float | None = None
+    turn_id: str | None = None
+    child_id: str = ""
+    ts: str = ""
+
+
+class EmotionClassifier(ABC):
+    """아이 발화의 감정을 매기는 분류기.
+
+    SafetyChecker 를 재사용하지 않습니다. Verdict(ALLOW/REWRITE/ESCALATE/BLOCK)는
+    대화를 게이팅한다는 전제의 의미론인데, 감정 신호는 어떤 경우에도 대화 흐름을
+    막아서는 안 됩니다. 이 분류기의 실패나 예외가 안전 판정과 응답 생성에 영향을
+    주지 않는다는 것이 불변식입니다.
+
+    Attributes:
+        name: 로그/비교 집계 키. EmotionResult.classifier 에 그대로 들어갑니다.
+    """
+
+    name: str = "base"
+
+    @abstractmethod
+    async def classify(
+        self, text: str, *, context: dict | None = None
+    ) -> EmotionResult:
+        """발화 하나에 감정 라벨 하나를 매깁니다.
+
+        Args:
+            text: 아이 발화(STT 결과). 빈 문자열이면 호출부가 아예 부르지 않습니다.
+            context: 세션 시각/직전 대화 등 참고 정보. 없으면 None.
+
+        Returns:
+            판정 결과를 담은 EmotionResult.
         """

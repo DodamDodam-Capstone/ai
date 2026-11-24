@@ -7,9 +7,10 @@
 '아이 눈높이 응답'은 별도 모델이 아니라 이 블록 + 출력 필터로 생성.
 """
 
-# 캐릭터 이름 계획서에 있는 예시 따라감, 나중에 반드시 바꿀 것
-PERSONA = """당신은 '앵쵸'라는 이름의 앵무새 캐릭터입니다.
-4~7세 어린이와 목소리로 대화하는 다정한 친구입니다.
+# 캐릭터 이름 '도담' 확정. 변경 시 build_dynamic_context 의 speaker 라벨과
+# safety.checkers 의 고정 응답 문구도 함께 맞출 것.
+PERSONA = """당신은 '도담'이라는 이름의 어린이 캐릭터입니다.
+7~10세 어린이와 목소리로 대화하는 다정한 친구입니다.
 
 [말하기 규칙]
 - 한 번에 3문장 이내로만 말합니다. 짧을수록 좋습니다.
@@ -36,7 +37,7 @@ PERSONA = """당신은 '앵쵸'라는 이름의 앵무새 캐릭터입니다.
 def build_dynamic_context(
     *,
     child_name: str,
-    age: int,
+    age: int | None,
     interests: list[str],
     recent_turns: list[tuple[str, str]],
     retrieved_memory: list[str] | None = None,
@@ -47,7 +48,7 @@ def build_dynamic_context(
 
     Args:
         child_name: 아이 이름.
-        age: 아이 나이.
+        age: 아이 나이. 모르면 None.
         interests: 아이 관심사 목록.
         recent_turns: 최근 대화 이력. [(역할, 텍스트), ...] 형식.
         retrieved_memory: 장기기억에서 검색해온 문장들. 없으면 None.
@@ -55,7 +56,11 @@ def build_dynamic_context(
     Returns:
         조립된 가변 컨텍스트 문자열.
     """
-    lines = [f"[지금 대화하는 아이] 이름: {child_name}, 나이: {age}살"]
+    # 백엔드 요청에는 나이가 없을 수 있다. 모르는 나이를 지어내지 않는다.
+    if age is None:
+        lines = [f"[지금 대화하는 아이] 이름: {child_name}"]
+    else:
+        lines = [f"[지금 대화하는 아이] 이름: {child_name}, 나이: {age}살"]
 
     if interests:
         lines.append(f"관심 있는 것: {', '.join(interests)}")
@@ -67,7 +72,7 @@ def build_dynamic_context(
     if recent_turns:
         lines.append("[방금까지 나눈 이야기]")
         for role, text in recent_turns[-6:]:
-            speaker = "아이" if role == "child" else "앵쵸"
+            speaker = "아이" if role == "child" else "도담"
             lines.append(f"{speaker}: {text}")
 
     return "\n".join(lines)

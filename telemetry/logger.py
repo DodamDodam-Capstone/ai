@@ -32,6 +32,11 @@ PRICING: dict[str, tuple[float, float]] = {
 # 표에서 가장 비싼 요금으로 계산해 과다 계상 쪽으로 틀리게 둔다.
 _FALLBACK_PRICE = max(PRICING.values(), key=lambda p: p[1])
 
+# 가장 심각한 턴과 원문 저장 비동의(store_text=False) 계정에서도 감정 라벨은 남긴다.
+# 2026-09-10 팀 결정이되 "우선"이라는 전제가 붙어 있어 하드코딩하지 않는다.
+# 법무/PO 검토 결과에 따라 뒤집히면 이 값만 False 로 바꾼다.
+KEEP_EMOTION_LABEL_WHEN_REDACTED = True
+
 
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:
     """모델별 단가로 토큰 비용을 계산한다.
@@ -58,23 +63,28 @@ class TurnLogger:
     Attributes:
         path: 일반 턴 로그 경로. 대시보드의 데이터 소스.
         review_path: 검토 큐 경로. 대시보드에 절대 연결하지 말 것.
+        emotion_path: 감정 신호 경로. 비동기로 도착하므로 턴 로그와 섞지 않는다.
     """
 
     def __init__(
         self,
         path: str = "logs/turns.jsonl",
         review_path: str = "logs/review_queue.jsonl",
+        emotion_path: str = "logs/emotions.jsonl",
     ):
         """로그 파일 경로를 설정하고 부모 디렉터리를 준비.
 
         Args:
             path: 일반 턴 로그를 저장할 JSONL 파일 경로. 부모 디렉터리가 없으면 생성.
             review_path: 검토 큐를 저장할 JSONL 파일 경로.
+            emotion_path: 감정 신호를 저장할 JSONL 파일 경로.
         """
         self.path = Path(path)
         self.review_path = Path(review_path)
+        self.emotion_path = Path(emotion_path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.review_path.parent.mkdir(parents=True, exist_ok=True)
+        self.emotion_path.parent.mkdir(parents=True, exist_ok=True)
 
     def log(self, *, child_id: str, session_id: str, result, store_text: bool = True):
         """한 턴의 결과를 로그 한 줄로 append.
@@ -108,7 +118,10 @@ class TurnLogger:
             ]
 
         record = {
-            "turn_id": str(uuid.uuid4()),
+            # 오케스트레이터가 턴 시작에 발급한 값을 그대로 쓴다. 비동기로 갈라진
+            # 감정 신호가 같은 값을 실어야 백엔드가 둘을 상관지을 수 있다.
+            # 오케스트레이터를 거치지 않고 직접 로깅하는 호출부를 위해 발급도 남겨둔다.
+            "turn_id": getattr(result, "turn_id", "") or str(uuid.uuid4()),
             "ts": datetime.now(timezone.utc).isoformat(),
             "child_id": child_id,
             "session_id": session_id,
@@ -153,6 +166,36 @@ class TurnLogger:
                     "reply_text": result.reply_text if store_text else None,
                 },
             )
+        return record
+
+
+    def log_emotion(self, *, session_id: str, signal) -> dict | None:
+        """감정 신호를 전용 로그에 한 줄로 append.
+
+        이 레코드에는 원문이 들어가지 않는다. 라벨·신뢰도·식별자뿐이므로 원문 저장
+        동의 설정과 무관하게 쓸 수 있고, 그래서 가장 심각한 턴에서도 남길 수 있다.
+
+        Args:
+            session_id: 세션 식별자.
+            signal: 기록할 EmotionSignal.
+
+        Returns:
+            기록된 dict. 정책이 꺼져 있으면 None.
+        """
+        if not KEEP_EMOTION_LABEL_WHEN_REDACTED:
+            return None
+
+        record = {
+            "turn_id": signal.turn_id,
+            "ts": signal.ts,
+            "child_id": signal.child_id,
+            "session_id": session_id,
+            "emotion": {
+                "label": signal.label.value,
+                "confidence": signal.confidence,
+            },
+        }
+        _append(self.emotion_path, record)
         return record
 
 

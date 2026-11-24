@@ -17,6 +17,7 @@ dist/
 
 # Virtual environments
 .venv/
+.venv-mlx/
 venv/
 env/
 
@@ -40,3 +41,10 @@ Thumbs.db
 # Obsidian (per-machine workspace state)
 .obsidian/
 
+
+# 감정 분류기 가중치 (약 440MB). 받는 방법은 models/README.md
+models/model/*.safetensors
+
+# 이전 STT 실험 산출물 (로컬 절대경로·AIHub 원본 전사문 포함). 평가 세트는 stt_eval/eval_sets/ 를 쓴다.
+stt_age_*_manifest.csv
+hard_test_100.csv

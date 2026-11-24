@@ -11,9 +11,12 @@ API 키 없이 파이프라인 전체를 검증하는 데모.
 import asyncio
 
 from core.fakes import FakeLLM, FakeSTT, FakeTTS
-from core.orchestrator import TurnOrchestrator
+from core.orchestrator import TurnOrchestrator, drain_emotion_tasks
+from emotion.checkers import RuleEmotionClassifier
 from safety.checkers import ReadabilityChecker, RuleChecker
 from telemetry.logger import TurnLogger
+
+CHILD_ID = "anon_001"
 
 PROFILE = {
     "name": "지우",
@@ -25,8 +28,8 @@ PROFILE = {
 CASES = [
     # (아이 발화, 모델이 뱉을 응답, 기대하는 결과)
     (
-        "앵쵸야 안녕! 오늘 공룡 그렸어",
-        "우와 정말? 앵쵸도 공룡 좋아해! 무슨 공룡 그렸어?",
+        "도담아 안녕! 오늘 공룡 그렸어",
+        "우와 정말? 도담이도 공룡 좋아해! 무슨 공룡 그렸어?",
         "정상 통과",
     ),
     (
@@ -35,7 +38,7 @@ CASES = [
         "보호자 분리 표현 -> 교체",
     ),
     (
-        "앵쵸 뭐해?",
+        "도담이 뭐해?",
         "현재 저는 사용자님과의 상호작용을 통해 다양한 정보를 처리하고 있으며, "
         "이러한 과정은 매우 복잡한 연산을 수반합니다.",
         "어휘/문장 길이 초과 -> 재생성",
@@ -64,20 +67,34 @@ CASES = [
 
 
 async def main():
-    logger = TurnLogger("logs/demo.jsonl", "logs/demo_review.jsonl")
+    logger = TurnLogger(
+        "logs/demo.jsonl", "logs/demo_review.jsonl", "logs/demo_emotions.jsonl"
+    )
+    emotions: dict[str, str] = {}
+    turns: list[tuple[str, str]] = []
+
+    def on_emotion(signal):
+        # 비동기로 도착하므로 아래 출력 시점에 아직 비어있을 수 있다.
+        emotions[signal.turn_id] = signal.label.value
+        logger.log_emotion(session_id="demo", signal=signal)
 
     for utterance, model_reply, expected in CASES:
         orch = TurnOrchestrator(
             stt=FakeSTT(utterance),
             # 재생성 시나리오: 두 번째 시도에서는 짧게 답한다고 가정
-            llm=FakeLLM([model_reply, "앵쵸는 지금 너랑 노는 중이야! 너는 뭐 해?"]),
+            llm=FakeLLM([model_reply, "도담이는 지금 너랑 노는 중이야! 너는 뭐 해?"]),
             tts=FakeTTS(),
             input_checkers=[RuleChecker()],
             output_checkers=[RuleChecker(), ReadabilityChecker()],
+            emotion_classifier=RuleEmotionClassifier(),
+            on_emotion=on_emotion,
         )
 
-        result = await orch.run(b"<audio>", profile=PROFILE, history=[])
-        logger.log(child_id="anon_001", session_id="demo", result=result)
+        result = await orch.run(
+            b"<audio>", profile=PROFILE, history=[], child_id=CHILD_ID
+        )
+        logger.log(child_id=CHILD_ID, session_id="demo", result=result)
+        turns.append((result.child_text, result.turn_id))
 
         # 카테고리까지 함께 출력.
         flags = [
@@ -90,7 +107,7 @@ async def main():
         risk = result.risk
         print(f"\n[기대] {expected}")
         print(f"  아이 : {result.child_text}")
-        print(f"  앵쵸 : {result.reply_text}")
+        print(f"  도담 : {result.reply_text}")
         print(f"  발동 : {flags or '없음'}")
         print(
             f"  위험 : L{int(risk.level)} {risk.categories or ''}"
@@ -100,6 +117,14 @@ async def main():
         print(f"  라우팅: {'필요' if result.escalate else '불필요'}", end="")
         print(f" / 알림 허용: {'예' if risk.notify_allowed else '아니오'}")
         print(f"  지연 : {result.total_ms:.1f}ms")
+
+    # asyncio.run() 은 메인 코루틴이 끝나는 순간 루프를 닫으며 미완료 태스크를 버린다.
+    # 감정 신호는 턴 응답을 기다리지 않고 따로 도착하므로, 끝에서 한 번 비워줘야 한다.
+    await drain_emotion_tasks()
+
+    print("\n[감정 분류] 비동기로 도착한 신호. 위 지연에는 가산되지 않음")
+    for child_text, turn_id in turns:
+        print(f"  {emotions.get(turn_id, '(없음)'):8} | {child_text}")
 
 
 if __name__ == "__main__":

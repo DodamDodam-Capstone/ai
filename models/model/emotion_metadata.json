@@ -1,0 +1,233 @@
+{
+  "schema_version": "model1-v0.3",
+  "guide_version": "v0.3 + 판정 메모 v0.3a R13~R18",
+  "model_name": "klue/bert-base",
+  "model_revision": null,
+  "classes": [
+    "C0",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5"
+  ],
+  "class_names": {
+    "C0": "감정 없음",
+    "C1": "긍정",
+    "C2": "걱정·두려움",
+    "C3": "속상함",
+    "C4": "부끄러움·미안함",
+    "C5": "부정 기타"
+  },
+  "code_to_class": {
+    "": "C0",
+    "E01": "C1",
+    "E02": "C1",
+    "E03": "C1",
+    "E04": "C2",
+    "E05": "C3",
+    "E06": "C3",
+    "E07": "C3",
+    "E08": "C4",
+    "E09": "C5"
+  },
+  "task": "single_label_classification",
+  "num_labels": 6,
+  "input_fields": [
+    "text"
+  ],
+  "review_threshold": 0.95,
+  "max_length": 128,
+  "review_min_coverage": 0.8,
+  "review_min_class_coverage": 0.5,
+  "include_tenses": [
+    "현재",
+    "과거",
+    "가정"
+  ],
+  "tense_is_predicted": false,
+  "safety_flag_is_predicted": false,
+  "normalization": "balanced STT tags: retain inner speech; remove Cc/Cf controls; collapse whitespace; keep punctuation in model input",
+  "split_grouping": "whitespace/punctuation-free text key, then actual token IDs including truncation",
+  "source_sheet_id": "10GW6NIURbaRaDid_Yf6TiABMkdoCk2K7CQ-9qMZJryc",
+  "label_sheet": "고유문장_전체",
+  "source_sheet": "스튜디오",
+  "source_sha256": "4b2998e6a679ff62100a39c6ae19344eb6cd5d701ae978ec206f800cd991eeaf",
+  "label_sha256": "b6dce8902ccda96a7c7f4980f4655508e62a0fbf678b975aeae0c5da80f125ae",
+  "source_rows": 254814,
+  "label_rows": 23910,
+  "model_unique_rows": 23611,
+  "seed": 42,
+  "run_id": "20261115_135356_464887",
+  "split_sizes": {
+    "train": 18891,
+    "validation": 2360,
+    "test": 2360
+  },
+  "split_support": {
+    "train": {
+      "C0": 17953,
+      "C1": 345,
+      "C2": 260,
+      "C3": 209,
+      "C4": 40,
+      "C5": 84
+    },
+    "validation": {
+      "C0": 2244,
+      "C1": 43,
+      "C2": 32,
+      "C3": 26,
+      "C4": 5,
+      "C5": 10
+    },
+    "test": {
+      "C0": 2244,
+      "C1": 43,
+      "C2": 32,
+      "C3": 26,
+      "C4": 5,
+      "C5": 10
+    }
+  },
+  "class_weights": [
+    0.7097947001457214,
+    5.1202569007873535,
+    5.898133754730225,
+    6.578518867492676,
+    15.037349700927734,
+    10.37675666809082
+  ],
+  "class_weight_rule": "train-only sqrt inverse frequency; clip before mean normalization",
+  "best_epoch": 4,
+  "max_epochs": 5,
+  "batch_size": 16,
+  "gradient_accumulation": 2,
+  "learning_rate": 2e-05,
+  "test_metrics": {
+    "accuracy": 0.986864406779661,
+    "macro_f1": 0.8736631743221662,
+    "emotion_macro_f1": 0.849777578743096,
+    "weighted_f1": 0.9868567126648267,
+    "emotion_recall": 0.8706896551724138,
+    "c0_false_alarm_rate": 0.0071301247771836,
+    "per_class": {
+      "C0": {
+        "precision": 0.9933125278644672,
+        "recall": 0.9928698752228164,
+        "f1": 0.9930911522175172,
+        "support": 2244
+      },
+      "C1": {
+        "precision": 0.8636363636363636,
+        "recall": 0.8837209302325582,
+        "f1": 0.8735632183908046,
+        "support": 43
+      },
+      "C2": {
+        "precision": 0.8823529411764706,
+        "recall": 0.9375,
+        "f1": 0.9090909090909091,
+        "support": 32
+      },
+      "C3": {
+        "precision": 0.9130434782608695,
+        "recall": 0.8076923076923077,
+        "f1": 0.8571428571428572,
+        "support": 26
+      },
+      "C4": {
+        "precision": 0.8333333333333334,
+        "recall": 1.0,
+        "f1": 0.9090909090909091,
+        "support": 5
+      },
+      "C5": {
+        "precision": 0.7,
+        "recall": 0.7,
+        "f1": 0.7,
+        "support": 10
+      }
+    },
+    "confusion_matrix": [
+      [
+        2228,
+        6,
+        4,
+        2,
+        1,
+        3
+      ],
+      [
+        5,
+        38,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        30,
+        0,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        21,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        5,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0,
+        7
+      ]
+    ]
+  },
+  "selective_metrics": {
+    "threshold": 0.95,
+    "coverage": 0.9872881355932204,
+    "accepted_count": 2330,
+    "accepted_accuracy": 0.9927038626609442,
+    "accepted_macro_f1": 0.9163163784611665,
+    "per_class_coverage": {
+      "C0": 0.9906417112299465,
+      "C1": 0.9534883720930233,
+      "C2": 0.9375,
+      "C3": 0.9230769230769231,
+      "C4": 0.6,
+      "C5": 0.9
+    }
+  },
+  "packages": {
+    "torch": "2.14.1+cu130",
+    "transformers": "5.22.1",
+    "numpy": "2.4.6",
+    "pandas": "2.2.3",
+    "gspread": "6.2.1"
+  },
+  "limitations": [
+    "AI first-pass labels; human gold set and seven-day relabel agreement not completed",
+    "scripted reading differs from spontaneous conversation",
+    "no speaker/recording/script independent split guarantee",
+    "rare class test support is small",
+    "confidence is not calibrated probability",
+    "no current mental-state or safety prediction"
+  ]
+}
