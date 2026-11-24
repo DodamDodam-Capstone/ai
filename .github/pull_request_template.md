@@ -29,7 +29,9 @@
 - [ ] 필요한 테스트를 추가하거나 수정했습니다.
 - [ ] 비밀정보, dataset, model artifact가 포함되지 않았는지 확인했습니다.
 - [ ] PR 제목이 `🐛 fix: 설명` 형식을 따릅니다.
-- [ ] PR 제목과 브랜치에 같은 `SCRUM-번호`가 있습니다.
+- [ ] 일반 작업 PR 제목과 브랜치에 같은 `SCRUM-번호`가 있습니다.
 - [ ] AI 작업 PR 제목에 `[AI]`가 있습니다.
 - [ ] 일반 작업의 base는 `development`이며 `main` 승격의 source는
       `development`입니다.
+
+<!-- main 승격 시 위 작업 템플릿을 스프린트 작업·검증 결과로 교체합니다. docs/TEAM_WORKFLOW_GUIDE.md의 스프린트 릴리스 절차 참고. -->

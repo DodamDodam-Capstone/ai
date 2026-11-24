@@ -1,13 +1,15 @@
 name: AI CI
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
   pull_request:
     branches: [main, development]
 permissions:
   contents: read
 concurrency:
-  group: ai-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ai-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   quality:
     name: ai-quality
@@ -28,20 +30,16 @@ jobs:
           elif [[ -f pyproject.toml ]]; then
             echo "mode=pyproject" >> "$GITHUB_OUTPUT"
           else
-            echo "mode=none" >> "$GITHUB_OUTPUT"
-            exit 0
+            echo "Python project configuration is required." >&2
+            exit 1
           fi
           if [[ ! -f .python-version ]]; then
             echo "A Python project is configured but .python-version is missing." >&2
             exit 1
           fi
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        if: steps.project.outputs.mode != 'none'
         with:
           python-version-file: .python-version
-      - name: Repository readiness
-        if: steps.project.outputs.mode == 'none'
-        run: echo "AI source is not initialized yet; CI configuration is ready."
       - name: Set up uv
         if: steps.project.outputs.mode == 'uv'
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
@@ -62,10 +60,55 @@ jobs:
         run: |
           uv run python -m compileall .
           uv run ruff check .
-          uv run pytest
       - name: Python checks with pip
         if: steps.project.outputs.mode == 'requirements' || steps.project.outputs.mode == 'pyproject'
         run: |
           python -m compileall .
           if command -v ruff >/dev/null 2>&1; then ruff check .; fi
-          if command -v pytest >/dev/null 2>&1; then pytest; fi
+      - name: Run project tests
+        shell: bash
+        env:
+          PROJECT_MODE: ${{ steps.project.outputs.mode }}
+        run: |
+          runner=(python)
+          if [[ "$PROJECT_MODE" == uv ]]; then runner=(uv run python); fi
+          "${runner[@]}" -m pytest tests --junitxml="$RUNNER_TEMP/ai-tests.xml"
+          python - "$RUNNER_TEMP/ai-tests.xml" <<'PYTHON'
+          import sys
+          import xml.etree.ElementTree as ET
+          cases = ET.parse(sys.argv[1]).findall(".//testcase")
+          if not any(case.find("skipped") is None for case in cases):
+              sys.exit("At least one AI project test must execute.")
+          PYTHON
+      - name: Release contract tests
+        run: python3 .github/scripts/test_release.py
+
+  release:
+    name: ai-release
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout the verified main commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Create the version snapshot and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/release.py
+
+  notify-integration:
+    needs: release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/notify-integration.yml
+    secrets:
+      INTEGRATION_APP_PRIVATE_KEY: ${{ secrets.INTEGRATION_APP_PRIVATE_KEY }}

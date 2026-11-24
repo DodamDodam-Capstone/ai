@@ -175,3 +175,25 @@ API token, 모델 저장소 credential은 첨부하지 않습니다.
 Organization 전체 흐름과 다른 저장소 예시는
 [integration 팀 가이드](https://github.com/DodamDodam-Capstone/integration/blob/main/docs/TEAM_WORKFLOW_GUIDE.md)를
 기준으로 합니다.
+
+## 스프린트 릴리스
+
+1. 최초 설정 Task는 SCRUM-191 (GitHub #51)입니다. 활성화 전에 저장소 Rulesets에서
+   `.github/rulesets/release-branch.json`과 `release-tag.json`을 각각 가져옵니다.
+   두 규칙은 `release/*` 브랜치와 `v*` 태그의 새 생성은 허용하고 변경·삭제·강제 푸시를 차단합니다.
+2. 릴리스할 때 작업 PR에서 루트 `VERSION`을 갱신합니다. 첫 버전은 `0.2.0`이며 FastAPI도 같은 파일을 읽습니다.
+   다음 수정 버전은 `0.2.1`, 다음 기능 묶음은 `0.3.0`으로 올릴 수 있습니다.
+3. 같은 저장소의 `development → main` 승격 PR을 엽니다. 예시 제목은
+   `🚀 chore(release): [AI] v0.2.0 스프린트 릴리스`입니다.
+   본문의 `## 스프린트 작업` 아래에 실제 포함된 Jira Task 링크, 작업 PR 번호와 검증 결과를 적습니다.
+   이월 작업은 해당 스프린트를 구분해 표시합니다. 릴리스마다 Jira Task를 추가할 필요는 없습니다.
+   Jira Fix Version은 필요할 때 `ai-0.2.0`처럼 별도로 연결합니다.
+4. 필수 검사와 리뷰 후 **merge commit**으로 병합합니다. strict 최신-base 조건으로 동기화가 필요하면
+   main과 development의 변경 내용을 비교하고 권한 있는 담당자가 기존 정책에 따라 계보를 연결합니다.
+   squash로 동기화하면 main의 커밋이 development의 조상이 되지 않습니다.
+5. main push의 `ai-quality`와 `ai-release` 성공 후 릴리스 브랜치, 태그, Release의 SHA를 확인합니다.
+   Release 상단에는 승격 PR 본문이, 그 아래에는 GitHub의 자동 변경 내역이 들어갑니다.
+   같은 SHA의 Actions 실행을 재실행하면 기존 Release를 재사용합니다. 다른 SHA가 같은 버전을 사용하면
+   ref를 변경하기 전에 실패합니다.
+6. `notify-integration`은 같은 SHA를 integration에 전달합니다. 통합 PR의 검사·승인·병합 및 실제 배포는
+   integration에서 확인합니다. 별도 Reconcile 경로의 릴리스 조건은 integration 담당자가 관리합니다.
