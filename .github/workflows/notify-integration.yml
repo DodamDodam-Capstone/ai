@@ -1,9 +1,10 @@
 name: Component Sync
 
 on:
-  workflow_dispatch:
-  push:
-    branches: [main]
+  workflow_call:
+    secrets:
+      INTEGRATION_APP_PRIVATE_KEY:
+        required: true
 
 permissions:
   contents: read
@@ -26,7 +27,6 @@ jobs:
           permission-contents: write
 
       - name: Notify integration repository
-        if: steps.app-token.outputs.token != ''
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           COMPONENT: ai

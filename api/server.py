@@ -33,6 +33,7 @@ import json
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
@@ -87,7 +88,11 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="DodamDodam AI", lifespan=lifespan)
+app = FastAPI(
+    title="DodamDodam AI",
+    version=(Path(__file__).resolve().parents[1] / "VERSION").read_text().strip(),
+    lifespan=lifespan,
+)
 
 
 def require_server_token(authorization: str | None = Header(default=None)) -> None:
