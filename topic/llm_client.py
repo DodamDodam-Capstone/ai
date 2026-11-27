@@ -10,6 +10,10 @@ from .prompt import SYSTEM_PROMPT, build_user_prompt
 from .schema import LLMTopicOutput, Turn
 
 
+class QuotaExceededError(Exception):
+    """API 사용 한도 초과 (예: Gemini 429). 재시도하지 않고 실행을 멈추는 신호."""
+
+
 class TopicLLM(Protocol):
     def analyze(self, turns: list[Turn], feedback: str | None = None) -> dict: ...
 
@@ -18,24 +22,41 @@ class GeminiTopicLLM:
     """pip install google-genai / 환경변수 GEMINI_API_KEY 필요.
     모델명은 공식 문서에서 현재 이름을 확인해 GEMINI_MODEL로 지정한다."""
 
-    def __init__(self, model: str | None = None):
+    def __init__(
+        self,
+        model: str | None = None,
+        thinking_level: str | None = None,
+        system_prompt: str | None = None,
+    ):
+        """Gemini 어댑터를 만든다.
+
+        Args:
+            model: 모델명. 없으면 환경변수 GEMINI_MODEL.
+            thinking_level: "minimal"·"low"·"medium"·"high". None이면 모델 기본값.
+                모델 간 공정 비교·기준 점수 측정에는 "minimal"(사실상 꺼짐)을 쓴다.
+            system_prompt: 시스템 프롬프트. None이면 prompt.SYSTEM_PROMPT(현재 프롬프트).
+
+        Raises:
+            QuotaExceededError: analyze 호출 시 429(한도 초과)를 받으면.
+        """
         from google import genai  # 지연 import: 다른 백엔드 쓸 때 설치 불필요
 
-        self.client = genai.Client()  # GEMINI_API_KEY 자동 사용
+        # GEMINI_API_KEY 자동 사용. 응답이 멈춰 실행 전체가 걸리지 않도록 2분 제한(ms)
+        self.client = genai.Client(http_options={"timeout": 120_000})
+        self.system_prompt = system_prompt or SYSTEM_PROMPT
         self.model = model or os.environ["GEMINI_MODEL"]
+        self.thinking_level = thinking_level
         self.last_meta: dict = {}
 
     def analyze(self, turns: list[Turn], feedback: str | None = None) -> dict:
-        resp = self.client.models.generate_content(
-            model=self.model,
-            contents=build_user_prompt(turns, feedback),
-            config={
-                "system_instruction": SYSTEM_PROMPT,
-                "response_mime_type": "application/json",
-                "response_json_schema": LLMTopicOutput.model_json_schema(),
-                "temperature": 0.0,
-            },
-        )
+        from google.genai import errors
+
+        try:
+            resp = self._generate(turns, feedback)
+        except errors.ClientError as e:
+            if getattr(e, "code", None) == 429:
+                raise QuotaExceededError(str(e)[:200]) from e
+            raise
         u = resp.usage_metadata
         self.last_meta = (
             {  # Gemini는 기본적으로 생각(thinking)을 할 수 있어 토큰 수로 기록
@@ -46,23 +67,47 @@ class GeminiTopicLLM:
         )
         return json.loads(resp.text)
 
+    def _generate(self, turns: list[Turn], feedback: str | None):
+        return self.client.models.generate_content(
+            model=self.model,
+            contents=build_user_prompt(turns, feedback),
+            config={
+                "system_instruction": self.system_prompt,
+                "response_mime_type": "application/json",
+                "response_json_schema": LLMTopicOutput.model_json_schema(),
+                "temperature": 0.0,
+                **(
+                    {"thinking_config": {"thinking_level": self.thinking_level}}
+                    if self.thinking_level
+                    else {}
+                ),
+            },
+        )
+
 
 class OpenAICompatTopicLLM:
     """vLLM 등으로 띄운 자체 서버 모델(Qwen 등)이나 OpenAI 호환 국내 API용.
     pip install openai / base_url, model 지정."""
 
-    def __init__(self, base_url: str, model: str, api_key: str = "EMPTY"):
+    def __init__(
+        self,
+        base_url: str,
+        model: str,
+        api_key: str = "EMPTY",
+        system_prompt: str | None = None,
+    ):
         from openai import OpenAI
 
         self.client = OpenAI(base_url=base_url, api_key=api_key)
         self.model = model
+        self.system_prompt = system_prompt or SYSTEM_PROMPT
 
     def analyze(self, turns: list[Turn], feedback: str | None = None) -> dict:
         resp = self.client.chat.completions.create(
             model=self.model,
             temperature=0.0,
             messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": build_user_prompt(turns, feedback)},
             ],
             response_format={
@@ -85,8 +130,15 @@ class OllamaTopicLLM:
         8192  # Ollama 기본 문맥 길이는 짧아서 시스템 프롬프트(규칙·예시)가 잘릴 수 있음
     )
 
-    def __init__(self, model: str, host: str | None = None, timeout: int = 600):
+    def __init__(
+        self,
+        model: str,
+        host: str | None = None,
+        timeout: int = 600,
+        system_prompt: str | None = None,
+    ):
         self.model = model
+        self.system_prompt = system_prompt or SYSTEM_PROMPT
         self.url = (
             host or os.getenv("OLLAMA_HOST_URL", "http://localhost:11434")
         ) + "/api/chat"
@@ -103,7 +155,7 @@ class OllamaTopicLLM:
             "format": LLMTopicOutput.model_json_schema(),
             "options": {"temperature": 0.0, "num_ctx": self.NUM_CTX},
             "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": build_user_prompt(turns, feedback)},
             ],
         }
