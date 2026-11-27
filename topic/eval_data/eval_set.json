@@ -1,0 +1,275 @@
+[
+ {"session_id": "E01", "cases": ["negative"],
+  "turns": [
+   {"turn_id": 1, "child_text": "오늘 학교에서 받아쓰기 했어.", "ai_text": "받아쓰기 했구나! 어땠어?"},
+   {"turn_id": 2, "child_text": "받아쓰기 너무 어려워서 싫어. 맨날 틀려.", "ai_text": "어려웠구나. 어떤 게 어려웠어?"},
+   {"turn_id": 3, "child_text": "받침 있는 거. 엄마가 집에서 연습하래.", "ai_text": "그렇구나. 같이 연습해 볼까?"},
+   {"turn_id": 4, "child_text": "싫어 재미없어.", "ai_text": "알겠어. 다음에 해보자."}],
+  "topics": [
+   {"topic": "받아쓰기", "aliases": ["받아쓰기 시험", "받아쓰기 연습", "받침", "국어"], "category": "SCHOOL_LEARNING", "sentiment": "negative", "turn_ids": [1, 2, 3, 4]}]},
+
+ {"session_id": "E02", "cases": ["topic_shift", "mixed", "name_in_text"],
+  "note": "친구 이름(지우)이 topic·key_point에 남으면 안 됨",
+  "turns": [
+   {"turn_id": 1, "child_text": "나 오늘 지우랑 놀이터에서 놀았어.", "ai_text": "재미있었겠다! 뭐 하고 놀았어?"},
+   {"turn_id": 2, "child_text": "그네 탔어. 지우는 내 제일 친한 친구야.", "ai_text": "제일 친한 친구구나."},
+   {"turn_id": 3, "child_text": "응 지우랑 노는 게 제일 좋아.", "ai_text": "좋겠다. 오늘 점심은 뭐 먹었어?"},
+   {"turn_id": 4, "child_text": "떡볶이! 근데 좀 매웠어.", "ai_text": "매웠구나."},
+   {"turn_id": 5, "child_text": "그래도 맛있었어.", "ai_text": "맛있었다니 다행이다!"}],
+  "topics": [
+   {"topic": "친한 친구", "aliases": ["친구", "단짝 친구", "단짝", "친구와 놀이", "친구와의 놀이", "친구와 놀기", "제일 친한 친구", "놀이터"], "category": "FRIENDS_RELATIONSHIP", "sentiment": "positive", "turn_ids": [1, 2, 3]},
+   {"topic": "떡볶이", "aliases": ["점심", "점심 식사", "음식"], "category": "DAILY_LIFE", "sentiment": "mixed", "turn_ids": [4, 5]}]},
+
+ {"session_id": "E03", "cases": ["emotion_only"],
+  "note": "'서운해'는 감정 표현이라 sentiment 근거가 아님. '좋아', '귀여워'가 근거",
+  "turns": [
+   {"turn_id": 1, "child_text": "우리 집에 아기 동생이 생겼어.", "ai_text": "축하해! 동생이 생겨서 어때?"},
+   {"turn_id": 2, "child_text": "좋아. 근데 엄마가 맨날 동생만 안아줘.", "ai_text": "그렇구나. 그럴 때 어떤 마음이 들어?"},
+   {"turn_id": 3, "child_text": "조금 서운해. 그래도 동생 귀여워.", "ai_text": "동생이 귀엽구나."}],
+  "topics": [
+   {"topic": "아기 동생", "aliases": ["동생", "새 동생", "동생 탄생", "남동생", "여동생"], "category": "FAMILY", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E04", "cases": ["keyword_intent"],
+  "note": "자동차라도 놀이 경험이면 PLAY_GAME",
+  "turns": [
+   {"turn_id": 1, "child_text": "어제 자동차 장난감으로 놀았어.", "ai_text": "자동차 장난감! 어떻게 놀았어?"},
+   {"turn_id": 2, "child_text": "경주 시켰어. 파란 차가 일등 했어.", "ai_text": "파란 차가 이겼구나!"},
+   {"turn_id": 3, "child_text": "자동차 놀이가 제일 재밌어.", "ai_text": "자동차 놀이를 정말 좋아하는구나."}],
+  "topics": [
+   {"topic": "자동차 장난감", "aliases": ["자동차", "자동차 놀이", "자동차 경주", "장난감 자동차", "장난감", "자동차 장난감 놀이"], "category": "PLAY_GAME", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E05", "cases": ["keyword_intent", "short_agreement", "ai_led"],
+  "note": "질문만 하고 평가는 없음 → unknown. 강아지는 AI 질문에 '응'만 함 → topic 없음 (기준서 v1.1 4-1, D5)",
+  "turns": [
+   {"turn_id": 1, "child_text": "전기차는 기름 안 넣는데 어떻게 움직여?", "ai_text": "전기차는 배터리에 전기를 모아서 모터를 돌려 움직여."},
+   {"turn_id": 2, "child_text": "배터리는 어디에 있어?", "ai_text": "보통 차 바닥에 있어. 신기하지?"},
+   {"turn_id": 3, "child_text": "응", "ai_text": "강아지도 좋아해?"},
+   {"turn_id": 4, "child_text": "응", "ai_text": "그렇구나!"}],
+  "topics": [
+   {"topic": "전기차", "aliases": ["자동차", "전기차 원리", "전기차 작동 원리", "배터리", "전기 자동차"], "category": "KNOWLEDGE_CURIOSITY", "sentiment": "unknown", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E06", "cases": ["recurrence", "topic_shift"],
+  "note": "고양이 이야기가 피자 이후 다시 등장 → 하나의 topic으로 묶여야 함",
+  "turns": [
+   {"turn_id": 1, "child_text": "우리 할머니 집에 고양이 있어.", "ai_text": "고양이가 있구나! 이름이 뭐야?"},
+   {"turn_id": 2, "child_text": "나비야. 하얀 고양이야.", "ai_text": "예쁜 이름이다."},
+   {"turn_id": 3, "child_text": "오늘 저녁에 피자 먹었어.", "ai_text": "피자 맛있었어?"},
+   {"turn_id": 4, "child_text": "응 엄청 맛있었어. 치즈 많은 거.", "ai_text": "치즈 피자 맛있지!"},
+   {"turn_id": 5, "child_text": "근데 나비는 나만 보면 와서 안겨. 나비 진짜 좋아.", "ai_text": "나비가 너를 좋아하나 보다!"}],
+  "topics": [
+   {"topic": "고양이", "aliases": ["할머니 집 고양이", "할머니 고양이", "반려묘", "하얀 고양이"], "category": "ANIMAL_NATURE", "sentiment": "positive", "turn_ids": [1, 2, 5]},
+   {"topic": "피자", "aliases": ["저녁", "저녁 식사", "치즈 피자", "음식"], "category": "DAILY_LIFE", "sentiment": "positive", "turn_ids": [3, 4]}]},
+
+ {"session_id": "E07", "cases": ["negative"],
+  "turns": [
+   {"turn_id": 1, "child_text": "나 어제 감기 걸려서 병원 갔어.", "ai_text": "아팠구나. 지금은 괜찮아?"},
+   {"turn_id": 2, "child_text": "코가 막혀. 주사 맞았는데 진짜 아팠어.", "ai_text": "주사 맞느라 고생했네."},
+   {"turn_id": 3, "child_text": "병원 가는 거 너무 싫어.", "ai_text": "병원이 무서울 수도 있지."}],
+  "topics": [
+   {"topic": "감기", "aliases": ["병원", "병원 방문", "감기와 병원", "병원 진료", "주사", "감기 치료"], "category": "HEALTH_BODY", "sentiment": "negative", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E08", "cases": ["negative", "emotion_only"],
+  "note": "'무서운'은 감정, '혼자 자는 거 싫어'가 명시적 부정 평가",
+  "turns": [
+   {"turn_id": 1, "child_text": "어제 무서운 꿈 꿔서 잠을 못 잤어.", "ai_text": "무서운 꿈을 꿨구나."},
+   {"turn_id": 2, "child_text": "그래서 오늘 계속 졸려.", "ai_text": "피곤했겠다."},
+   {"turn_id": 3, "child_text": "밤에 혼자 자는 거 싫어.", "ai_text": "혼자 자는 게 무서울 수 있어."}],
+  "topics": [
+   {"topic": "수면", "aliases": ["잠", "혼자 자기", "무서운 꿈", "악몽", "수면 문제", "혼자 자는 것"], "category": "HEALTH_BODY", "sentiment": "negative", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E09", "cases": ["mixed"],
+  "turns": [
+   {"turn_id": 1, "child_text": "나 피아노 학원 다녀.", "ai_text": "피아노 치는구나!"},
+   {"turn_id": 2, "child_text": "치는 건 좋은데 연습하는 건 너무 힘들어.", "ai_text": "연습이 힘들 때도 있지."},
+   {"turn_id": 3, "child_text": "다음 주에 발표회 해. 엄청 떨려.", "ai_text": "발표회 잘할 거야!"}],
+  "topics": [
+   {"topic": "피아노", "aliases": ["피아노 학원", "피아노 연습", "피아노 발표회", "악기"], "category": "HOBBY_CREATIVE", "sentiment": "mixed", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E10", "cases": ["normalization"],
+  "note": "'마크'는 마인크래프트 줄임말 → 마인크래프트로 정규화. 게임 안에서 집을 만든 이야기 → HOBBY_CREATIVE, 허용 대안 PLAY_GAME (기준서 v1.1 2-3, M2)",
+  "turns": [
+   {"turn_id": 1, "child_text": "나 마크 하는 거 좋아해.", "ai_text": "마인크래프트 말하는 거야?"},
+   {"turn_id": 2, "child_text": "응! 마인크래프트에서 집 지었어.", "ai_text": "우와 어떤 집이야?"},
+   {"turn_id": 3, "child_text": "다이아몬드로 만든 큰 집. 진짜 멋있어.", "ai_text": "정말 멋지겠다!"}],
+  "topics": [
+   {"topic": "마인크래프트", "aliases": ["마크", "게임", "마인크래프트 게임", "마인크래프트 집짓기", "마인크래프트 집 짓기"], "category": "HOBBY_CREATIVE", "category_alt": "PLAY_GAME", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E11", "cases": ["stt_error"],
+  "note": "'수항'은 '수학'의 STT 오인식 → topic은 수학",
+  "turns": [
+   {"turn_id": 1, "child_text": "오늘 학교에서 수항 시간에 덧셈 했어.", "ai_text": "수학 시간에 덧셈 했구나!"},
+   {"turn_id": 2, "child_text": "응 근데 덧셈은 쉬워. 나 수항 잘해.", "ai_text": "멋지다!"},
+   {"turn_id": 3, "child_text": "수항이 제일 재밌어.", "ai_text": "수학을 좋아하는구나."}],
+  "topics": [
+   {"topic": "수학", "aliases": ["수학 시간", "덧셈", "수학 공부", "수학 수업"], "category": "SCHOOL_LEARNING", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E12", "cases": ["stt_error"],
+  "note": "띄어쓰기·철자가 깨진 STT 문장. 강아지 이름(콩이)은 개인정보 아님",
+  "turns": [
+   {"turn_id": 1, "child_text": "어 그 어제 그 강 아지 산채 갔는데", "ai_text": "강아지랑 산책 갔어?"},
+   {"turn_id": 2, "child_text": "응 우리 강아지 콩이 엄청 빨리 뛰어", "ai_text": "콩이가 신났구나!"},
+   {"turn_id": 3, "child_text": "콩이랑 산책하는 거 제일 좋아", "ai_text": "콩이랑 산책하는 시간이 즐겁구나."}],
+  "topics": [
+   {"topic": "강아지 산책", "aliases": ["강아지", "반려견", "강아지와 산책", "강아지와의 산책", "반려견 산책", "산책"], "category": "ANIMAL_NATURE", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E13", "cases": ["empty"],
+  "note": "의미 있는 주제 없음 → topics는 빈 배열이어야 함",
+  "turns": [
+   {"turn_id": 1, "child_text": "안녕", "ai_text": "안녕! 오늘 기분 어때?"},
+   {"turn_id": 2, "child_text": "몰라", "ai_text": "그렇구나. 무슨 이야기 하고 싶어?"},
+   {"turn_id": 3, "child_text": "음..", "ai_text": "천천히 생각해도 돼."},
+   {"turn_id": 4, "child_text": "이제 갈래", "ai_text": "그래, 다음에 또 이야기하자!"}],
+  "topics": []},
+
+ {"session_id": "E14", "cases": ["ai_led", "short_agreement"],
+  "note": "AI가 우주 이야기를 주도하고 아동은 '응'만 함 → topic 없음 (기준서 v1.1 4-1, D5). '밥 먹으러 갈래'도 지나가는 언급이라 topic 아님",
+  "turns": [
+   {"turn_id": 1, "child_text": "심심해", "ai_text": "그럼 우주 이야기 해줄까? 우주에는 별이 엄청 많아."},
+   {"turn_id": 2, "child_text": "응", "ai_text": "태양은 지구보다 109배나 커. 우주 좋아해?"},
+   {"turn_id": 3, "child_text": "응", "ai_text": "다음엔 행성 이야기도 해줄게!"},
+   {"turn_id": 4, "child_text": "이제 밥 먹으러 갈래", "ai_text": "맛있게 먹어!"}],
+  "topics": []},
+
+ {"session_id": "E15", "cases": ["neutral"],
+  "note": "'그냥 그랬어'는 명시적 중립 → neutral (unknown 아님)",
+  "turns": [
+   {"turn_id": 1, "child_text": "오늘 학교에 소방관 아저씨가 왔어.", "ai_text": "소방관이 학교에 왔구나! 뭐 했어?"},
+   {"turn_id": 2, "child_text": "불 나면 어떻게 하는지 배웠어. 수건으로 입 막고 낮게 가는 거.", "ai_text": "잘 기억하고 있네!"},
+   {"turn_id": 3, "child_text": "그냥 그랬어. 재밌지도 않고 지루하지도 않았어.", "ai_text": "그랬구나."}],
+  "topics": [
+   {"topic": "소방 안전 교육", "aliases": ["소방 교육", "소방관", "화재 대피", "화재 대피 교육", "소방 안전", "화재 안전 교육", "안전 교육", "소방관 방문"], "category": "SCHOOL_LEARNING", "sentiment": "neutral", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E16", "cases": ["negative", "name_in_text"],
+  "note": "친구 이름(민준)이 topic·key_point에 남으면 안 됨",
+  "turns": [
+   {"turn_id": 1, "child_text": "민준이가 자꾸 나 놀려.", "ai_text": "놀려서 기분이 안 좋았겠다."},
+   {"turn_id": 2, "child_text": "내 그림 이상하다고 했어. 친구가 놀리는 거 진짜 싫어.", "ai_text": "그런 말 들으면 속상하지."},
+   {"turn_id": 3, "child_text": "선생님한테 말할까?", "ai_text": "좋은 생각이야. 선생님께 이야기해 보자."}],
+  "topics": [
+   {"topic": "친구의 놀림", "aliases": ["놀림", "친구 놀림", "친구가 놀림", "친구의 놀림", "친구와의 갈등", "친구 갈등", "놀림 받음"], "category": "FRIENDS_RELATIONSHIP", "sentiment": "negative", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E17", "cases": ["pii", "boundary"],
+  "note": "학교 이름이 key_point에 남으면 안 됨. 달리기는 운동이라 HEALTH_BODY (운동회라 SCHOOL과 경계)",
+  "turns": [
+   {"turn_id": 1, "child_text": "나 햇살초등학교 2학년이야.", "ai_text": "2학년이구나!"},
+   {"turn_id": 2, "child_text": "우리 반에서 내가 달리기 제일 빨라.", "ai_text": "우와 정말 빠르구나!"},
+   {"turn_id": 3, "child_text": "운동회 때 일등 하고 싶어. 달리기 좋아.", "ai_text": "운동회가 기대되겠다!"}],
+  "topics": [
+   {"topic": "달리기", "aliases": ["운동회", "달리기 시합", "달리기 경주", "운동회 달리기", "운동"], "category": "HEALTH_BODY", "sentiment": "positive", "turn_ids": [2, 3]}]},
+
+ {"session_id": "E18", "cases": ["topic_shift", "multi_topic"],
+  "turns": [
+   {"turn_id": 1, "child_text": "방과후 시간에 종이접기로 개구리 접었어.", "ai_text": "개구리를 접었구나!"},
+   {"turn_id": 2, "child_text": "종이접기 재밌어. 다음엔 학 접을 거야.", "ai_text": "학도 멋지겠다."},
+   {"turn_id": 3, "child_text": "근데 오늘 형이랑 싸웠어. 형이 내 과자 먹었어.", "ai_text": "과자를 먹어서 화났겠다."},
+   {"turn_id": 4, "child_text": "형 미워.", "ai_text": "그런 마음이 들 수 있어."}],
+  "topics": [
+   {"topic": "종이접기", "aliases": ["종이접기 개구리", "개구리 종이접기", "방과후 종이접기", "만들기"], "category": "HOBBY_CREATIVE", "sentiment": "positive", "turn_ids": [1, 2]},
+   {"topic": "형과의 다툼", "aliases": ["형", "형과의 싸움", "형과 싸움", "형제 갈등", "형과의 갈등", "형제 다툼", "형제간 다툼"], "category": "FAMILY", "sentiment": "negative", "turn_ids": [3, 4]}]},
+
+ {"session_id": "E19", "cases": ["other", "boundary"],
+  "note": "장래희망은 10개 중 맞는 칸이 없어 OTHER로 둠 (팀 확인 필요)",
+  "turns": [
+   {"turn_id": 1, "child_text": "나 커서 경찰관 될 거야.", "ai_text": "경찰관! 왜 경찰관이 되고 싶어?"},
+   {"turn_id": 2, "child_text": "나쁜 사람 잡고 싶어. 경찰차도 멋있어.", "ai_text": "멋진 꿈이다."},
+   {"turn_id": 3, "child_text": "진짜 꼭 될 거야.", "ai_text": "응원할게!"}],
+  "topics": [
+   {"topic": "장래희망", "aliases": ["장래 희망", "경찰관", "꿈", "경찰관 꿈", "미래의 꿈", "경찰관 장래희망", "직업"], "category": "OTHER", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E20", "cases": ["keyword_intent"],
+  "note": "설계서 표: '차 타고 할머니 집 갔어' → 일상생활 / 가족 방문",
+  "turns": [
+   {"turn_id": 1, "child_text": "주말에 차 타고 할머니 집 갔어.", "ai_text": "할머니 댁에 갔구나! 뭐 했어?"},
+   {"turn_id": 2, "child_text": "할머니가 만든 김치전 먹었어. 너무 맛있었어.", "ai_text": "맛있었겠다!"}],
+  "topics": [
+   {"topic": "할머니 댁 방문", "aliases": ["가족 방문", "할머니 집 방문", "할머니 집", "할머니 댁", "할머니", "김치전", "주말 나들이"], "category": "DAILY_LIFE", "sentiment": "positive", "turn_ids": [1, 2]}]},
+
+ {"session_id": "E21", "cases": ["knowledge"],
+  "turns": [
+   {"turn_id": 1, "child_text": "하늘은 왜 파란색이야?", "ai_text": "햇빛이 공기에 부딪혀서 파란빛이 많이 퍼지기 때문이야."},
+   {"turn_id": 2, "child_text": "그럼 노을은 왜 빨개?", "ai_text": "저녁에는 햇빛이 더 멀리 와서 빨간빛이 남아."},
+   {"turn_id": 3, "child_text": "신기하다. 그런 거 알아보는 거 재밌어.", "ai_text": "궁금한 걸 알아보는 건 멋진 일이야."}],
+  "topics": [
+   {"topic": "하늘 색깔", "aliases": ["하늘", "하늘 색", "하늘이 파란 이유", "노을", "하늘과 노을", "하늘색", "빛"], "category": "KNOWLEDGE_CURIOSITY", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E22", "cases": ["short_agreement", "ai_led"],
+  "note": "처음엔 '응'뿐이지만 이후 자발적으로 좋다고 말함 → positive 가능",
+  "turns": [
+   {"turn_id": 1, "child_text": "오늘 뭐 할까", "ai_text": "그림 그리는 거 좋아해?"},
+   {"turn_id": 2, "child_text": "응", "ai_text": "주로 뭐 그려?"},
+   {"turn_id": 3, "child_text": "공주 그림 많이 그려. 그림 그리는 게 제일 좋아. 어제도 세 장 그렸어.", "ai_text": "우와 세 장이나!"}],
+  "topics": [
+   {"topic": "그림 그리기", "aliases": ["그림", "공주 그림", "그리기", "미술"], "category": "HOBBY_CREATIVE", "sentiment": "positive", "turn_ids": [2, 3]}]},
+
+ {"session_id": "E23", "cases": ["mixed", "boundary"],
+  "note": "수영은 운동이라 HEALTH_BODY (HOBBY와 경계)",
+  "turns": [
+   {"turn_id": 1, "child_text": "수영 배우는데 물에 뜨는 건 재밌어.", "ai_text": "물에 뜨는 거 재밌구나!"},
+   {"turn_id": 2, "child_text": "근데 머리 물에 넣는 건 무서워서 싫어.", "ai_text": "처음엔 무서울 수 있어."},
+   {"turn_id": 3, "child_text": "선생님이 잘한다고 했어.", "ai_text": "칭찬받았구나!"}],
+  "topics": [
+   {"topic": "수영", "aliases": ["수영 배우기", "수영 강습", "수영 수업", "운동"], "category": "HEALTH_BODY", "sentiment": "mixed", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E24", "cases": ["positive"],
+  "turns": [
+   {"turn_id": 1, "child_text": "내일 엄마 생일이야.", "ai_text": "엄마 생일이구나!"},
+   {"turn_id": 2, "child_text": "아빠랑 몰래 케이크 사기로 했어.", "ai_text": "깜짝 파티구나!"},
+   {"turn_id": 3, "child_text": "엄마가 좋아하면 좋겠어. 엄마 생일 축하해 주는 거 너무 신나.", "ai_text": "엄마가 정말 기뻐하실 거야."}],
+  "topics": [
+   {"topic": "엄마 생일", "aliases": ["생일", "엄마 생일 파티", "깜짝 파티", "엄마 생일 준비", "생일 파티", "생일 케이크"], "category": "FAMILY", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E25", "cases": ["topic_shift", "multi_topic"],
+  "turns": [
+   {"turn_id": 1, "child_text": "반이 바뀌어서 새 선생님 왔어.", "ai_text": "새 선생님은 어때?"},
+   {"turn_id": 2, "child_text": "새 선생님 무서워. 숙제 너무 많이 내줘서 싫어.", "ai_text": "숙제가 많구나."},
+   {"turn_id": 3, "child_text": "그래도 짝꿍은 좋아. 짝꿍이랑 지우개 바꿨어.", "ai_text": "짝꿍이랑 친해졌구나!"}],
+  "topics": [
+   {"topic": "새 선생님", "aliases": ["선생님", "담임 선생님", "새 담임 선생님", "숙제", "새 학기", "새 반", "반 변경"], "category": "SCHOOL_LEARNING", "sentiment": "negative", "turn_ids": [1, 2]},
+   {"topic": "짝꿍", "aliases": ["짝", "새 짝꿍", "짝꿍과의 관계", "짝꿍과의 우정", "친구"], "category": "FRIENDS_RELATIONSHIP", "sentiment": "positive", "turn_ids": [3]}]},
+
+ {"session_id": "E26", "cases": ["recurrence", "topic_shift"],
+  "note": "turn 4의 '응'은 버섯 질문에 대한 답이지만, 뒤 문장은 슬라임 이야기",
+  "turns": [
+   {"turn_id": 1, "child_text": "나 슬라임 새로 샀어!", "ai_text": "어떤 슬라임이야?"},
+   {"turn_id": 2, "child_text": "반짝이 들어간 거. 만지면 말랑말랑해.", "ai_text": "재밌겠다!"},
+   {"turn_id": 3, "child_text": "오늘 급식에 버섯 나왔어. 버섯은 싫어.", "ai_text": "버섯을 안 좋아하는구나."},
+   {"turn_id": 4, "child_text": "응. 근데 슬라임은 진짜 재밌어. 내일 친구한테 보여줄 거야.", "ai_text": "친구도 좋아하겠다!"}],
+  "topics": [
+   {"topic": "슬라임", "aliases": ["슬라임 놀이", "반짝이 슬라임", "장난감"], "category": "PLAY_GAME", "sentiment": "positive", "turn_ids": [1, 2, 4]},
+   {"topic": "버섯", "aliases": ["급식", "급식 버섯", "음식", "편식"], "category": "DAILY_LIFE", "sentiment": "negative", "turn_ids": [3, 4]}]},
+
+ {"session_id": "E27", "cases": ["emotion_only"],
+  "note": "'울었어'는 감정·행동. 혼난 일에 대한 평가는 없음 → unknown",
+  "turns": [
+   {"turn_id": 1, "child_text": "엄마한테 혼났어.", "ai_text": "무슨 일 있었어?"},
+   {"turn_id": 2, "child_text": "방 안 치워서. 그래서 울었어.", "ai_text": "속상했겠다."},
+   {"turn_id": 3, "child_text": "응", "ai_text": "다음엔 같이 치워볼까?"}],
+  "topics": [
+   {"topic": "엄마에게 혼남", "aliases": ["혼남", "엄마한테 혼남", "엄마에게 혼난 일", "엄마한테 혼난 일", "방 청소", "방 정리", "꾸중", "엄마의 꾸중"], "category": "FAMILY", "sentiment": "unknown", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E28", "cases": ["neutral"],
+  "note": "'그냥 맨날 똑같아' → neutral",
+  "turns": [
+   {"turn_id": 1, "child_text": "오늘 아침에 일찍 일어났어.", "ai_text": "몇 시에 일어났어?"},
+   {"turn_id": 2, "child_text": "일곱 시. 학교 가기 전에 밥 먹고 양치했어.", "ai_text": "부지런하다!"},
+   {"turn_id": 3, "child_text": "그냥 맨날 똑같아.", "ai_text": "매일 규칙적으로 지내는구나."}],
+  "topics": [
+   {"topic": "아침 일과", "aliases": ["하루 일과", "아침", "아침 루틴", "등교 준비", "일과", "아침 준비", "기상"], "category": "DAILY_LIFE", "sentiment": "neutral", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E29", "cases": ["boundary"],
+  "note": "학교 활동이지만 대화 중심은 식물 기르기 → ANIMAL_NATURE (SCHOOL과 경계)",
+  "turns": [
+   {"turn_id": 1, "child_text": "학교에서 강낭콩 심었어.", "ai_text": "강낭콩을 심었구나!"},
+   {"turn_id": 2, "child_text": "싹이 났어! 매일 물 줘.", "ai_text": "잘 자라고 있구나."},
+   {"turn_id": 3, "child_text": "콩이 빨리 자랐으면 좋겠어. 키우는 거 재밌어.", "ai_text": "쑥쑥 자랄 거야!"}],
+  "topics": [
+   {"topic": "강낭콩", "aliases": ["강낭콩 키우기", "강낭콩 기르기", "강낭콩 심기", "식물", "식물 키우기", "식물 기르기", "콩"], "category": "ANIMAL_NATURE", "sentiment": "positive", "turn_ids": [1, 2, 3]}]},
+
+ {"session_id": "E30", "cases": ["mixed"],
+  "turns": [
+   {"turn_id": 1, "child_text": "방학 때 바다 갈 거야.", "ai_text": "바다! 기대되겠다."},
+   {"turn_id": 2, "child_text": "바다에서 수영하는 건 좋은데 모래가 발에 붙는 건 싫어.", "ai_text": "모래가 찝찝하지."},
+   {"turn_id": 3, "child_text": "그래도 조개 줍고 싶어.", "ai_text": "조개 많이 줍자!"}],
+  "topics": [
+   {"topic": "바다 여행", "aliases": ["바다", "여행", "방학 여행", "바닷가", "가족 여행", "바다 놀러가기", "방학"], "category": "DAILY_LIFE", "sentiment": "mixed", "turn_ids": [1, 2, 3]}]}
+]
