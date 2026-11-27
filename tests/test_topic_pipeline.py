@@ -15,11 +15,11 @@ import pytest
 
 from topic import pipeline
 from topic.eval import evaluate
-from topic.llm_client import MockTopicLLM
+from topic.llm_client import MockTopicLLM, QuotaExceededError
 from topic.prompt import EXAMPLE_OUTPUT, EXAMPLE_TURNS
 from topic.repo_sqlite import SqliteRepo
 from topic.schema import Turn
-from topic.validator import validate
+from topic.validator import TopicValidationError, validate
 
 TURNS = [
     {
@@ -182,7 +182,7 @@ def test_few_shot_example_passes_validation():
     validate(EXAMPLE_OUTPUT, [Turn(**t) for t in EXAMPLE_TURNS])
 
 
-def test_evaluate_strict_and_lenient_category():
+def test_evaluate_joint_f1_and_lenient():
     gold = [
         {
             "session_id": "S001",
@@ -206,9 +206,10 @@ def test_evaluate_strict_and_lenient_category():
         {"session_id": "S001", "topic": "친구와의 다툼", "claims": 1, "unsupported": 1},
     ]
     report = evaluate({"S001": GOOD["topics"]}, gold, halluc)
-    assert report["topic_f1"] == 1.0
-    assert report["category_accuracy"] == 0.5  # 주 라벨만
-    assert report["category_accuracy_lenient(보조)"] == 1.0  # 허용 대안 포함
+    assert report["topic_f1(보조)"] == 1.0
+    assert report["joint_f1"] == 0.5  # 2 × 1 / (2 + 2): category는 1개만 맞음
+    assert report["joint_f1_lenient(보조)"] == 1.0  # 허용 대안 포함
+    assert report["category_accuracy(보조)"] == 0.5
     assert report["hallucination_rate"] == round(1 / 3, 3)
 
 
@@ -238,3 +239,166 @@ def test_eval_set_is_well_formed():
                 t["topic"],
             )
             assert set(t["turn_ids"]) <= turn_ids, (s["session_id"], t["topic"])
+
+
+def _turns(*child_texts: str) -> list[Turn]:
+    """아이 발화만 지정해 Turn 목록을 만든다.
+
+    Args:
+        *child_texts: 턴 순서대로의 아이 발화.
+
+    Returns:
+        turn_id가 1부터 붙은 Turn 목록.
+    """
+    return [
+        Turn(turn_id=i, child_text=c, ai_text="그렇구나.")
+        for i, c in enumerate(child_texts, start=1)
+    ]
+
+
+def _one_topic(key_point: str, topic: str = "놀이터") -> dict:
+    return {
+        "topics": [
+            {
+                "category": "PLAY_GAME",
+                "subtopic": None,
+                "topic": topic,
+                "sentiment": "positive",
+                "key_point": key_point,
+                "turn_ids": [1],
+            }
+        ]
+    }
+
+
+def test_person_name_in_output_is_rejected():
+    turns = _turns("오늘 하준이랑 놀이터에서 놀았어. 재밌었어.")
+    with pytest.raises(TopicValidationError, match="person name '하준'"):
+        validate(_one_topic("하준이와 놀이터에서 놀았다고 말함"), turns)
+    validate(_one_topic("친구와 놀이터에서 놀았다고 말함"), turns)
+
+
+def test_pet_name_and_relation_are_allowed():
+    turns = _turns("우리 강아지 보리랑 산책했어. 진짜 좋아.")
+    validate(
+        _one_topic("강아지 보리와 산책한 것을 좋아한다고 말함", "강아지 산책"), turns
+    )
+    turns = _turns("엄마랑 동생이랑 놀이터 갔어. 재밌었어.")
+    validate(_one_topic("엄마, 동생과 놀이터에서 놀았다고 말함"), turns)
+
+
+def _topic(name, category, turn_ids):
+    return {
+        "category": category,
+        "subtopic": None,
+        "topic": name,
+        "sentiment": "unknown",
+        "key_point": "-",
+        "turn_ids": turn_ids,
+    }
+
+
+def test_matching_name_first_then_turn_iou_one_to_one():
+    gold = [
+        {
+            "session_id": "S001",
+            "topics": [
+                {
+                    "topic": "하늘 색깔",
+                    "aliases": ["하늘색"],
+                    "category": "KNOWLEDGE_CURIOSITY",
+                    "turn_ids": [1, 2, 3],
+                },
+                {"topic": "피자", "category": "DAILY_LIFE", "turn_ids": [4, 5]},
+                {"topic": "고양이", "category": "ANIMAL_NATURE", "turn_ids": [6, 7]},
+            ],
+        }
+    ]
+    pred = [
+        _topic("하늘의 색", "KNOWLEDGE_CURIOSITY", [1, 2, 3]),  # "의" 정규화로 이름 짝
+        _topic("저녁 식사", "DAILY_LIFE", [4, 5]),  # 이름은 다르지만 IoU 1.0
+        _topic(
+            "하루 이야기", "DAILY_LIFE", [1, 2, 3, 4, 5, 6, 7]
+        ),  # 큰 topic: IoU 2/7 < 0.5
+    ]
+    report = evaluate({"S001": pred}, gold)
+    assert report["matched_by_name"] == 1
+    assert report["matched_by_turn"] == 1
+    assert report["matched"] == 2  # 큰 topic은 고양이와 짝이 되지 않음
+    assert report["joint_correct"] == 2
+
+
+def test_one_prediction_cannot_match_two_gold_topics():
+    gold = [
+        {
+            "session_id": "S001",
+            "topics": [
+                {"topic": "종이접기", "category": "HOBBY_CREATIVE", "turn_ids": [1, 2]},
+                {"topic": "형과의 다툼", "category": "FAMILY", "turn_ids": [2, 3]},
+            ],
+        }
+    ]
+    merged = [_topic("방과후", "HOBBY_CREATIVE", [1, 2, 3])]  # 두 정답과 IoU 2/3
+    report = evaluate({"S001": merged}, gold)
+    assert report["matched"] == 1
+
+
+def test_name_only_failures_are_saved_with_names_masked():
+    repo = SqliteRepo()
+    repo.add_turns(
+        "S002",
+        [
+            {
+                "turn_id": 1,
+                "child_text": "나 오늘 하준이랑 놀이터에서 놀았어.",
+                "ai_text": "재밌었겠다!",
+            },
+            {
+                "turn_id": 2,
+                "child_text": "그네 탔어. 하준이는 내 친구야.",
+                "ai_text": "그렇구나.",
+            },
+        ],
+    )
+    leaked = {
+        "topics": [
+            {
+                "category": "PLAY_GAME",
+                "subtopic": None,
+                "topic": "하준이와 놀이터",
+                "sentiment": "unknown",
+                "key_point": "하준이랑 놀이터에서 그네를 탔다고 말함",
+                "turn_ids": [1, 2],
+            }
+        ]
+    }
+    pipeline.process_session_topic("S002", MockTopicLLM(leaked), repo)
+    job = repo.get_job("S002")
+    assert job["status"] == "done"
+    assert job["error"] == "person names masked"
+    saved = repo.get_topics("S002")[0]
+    assert "하준" not in saved["topic"] + saved["key_point"]
+    assert saved["topic"] == "친구와 놀이터"
+
+
+def test_masking_is_not_used_when_other_errors_remain():
+    bad = _mutated(lambda d: d["topics"][0].update(turn_ids=[99]))
+    repo, _ = _run(bad)
+    assert repo.get_job("S001")["status"] == "failed"
+
+
+def test_quota_error_stops_without_retry():
+    class QuotaLLM:
+        calls = 0
+
+        def analyze(self, turns, feedback=None):
+            QuotaLLM.calls += 1
+            raise QuotaExceededError("429")
+
+    repo = SqliteRepo()
+    repo.add_turns("S001", TURNS)
+    with pytest.raises(QuotaExceededError):
+        pipeline.process_session_topic("S001", QuotaLLM(), repo)
+    assert QuotaLLM.calls == 1
+    assert repo.get_job("S001")["status"] == "quota"
+    assert repo.get_topics("S001") == []
